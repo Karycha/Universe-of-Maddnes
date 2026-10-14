@@ -1,5 +1,5 @@
 /* Universe Madness — WIDOK: ekrany, karty, dotyk, paczki, kolekcja, zapis. */
-const APP_VERSION='0.7';   // przy każdej aktualizacji podbij tu i w version.json (i ?v= w index.html)
+const APP_VERSION='0.7.1';   // przy każdej aktualizacji podbij tu i w version.json (i ?v= w index.html)
 /* Auto-aktualizacja: telefon trzyma starą stronę w pamięci podręcznej, więc sprawdzamy version.json bez cache. */
 (function(){try{fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{
   if(j&&j.v&&j.v!==APP_VERSION&&!location.search.includes('v='+j.v))location.replace('./?v='+j.v);}).catch(()=>{})}catch(e){}})();
