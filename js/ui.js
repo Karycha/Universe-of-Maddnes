@@ -1,5 +1,5 @@
 /* Universe Madness — WIDOK: ekrany, karty, dotyk, paczki, kolekcja, zapis. */
-const APP_VERSION='0.10';   // przy każdej aktualizacji podbij tu i w version.json (i ?v= w index.html)
+const APP_VERSION='0.11';   // przy każdej aktualizacji podbij tu i w version.json (i ?v= w index.html)
 /* Auto-aktualizacja: telefon trzyma starą stronę w pamięci podręcznej, więc sprawdzamy version.json bez cache. */
 (function(){try{fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{
   if(j&&j.v&&j.v!==APP_VERSION&&!location.search.includes('v='+j.v))location.replace('./?v='+j.v);}).catch(()=>{})}catch(e){}})();
@@ -177,6 +177,7 @@ function renderLeaders(){
     <div class="ls-info" style="--u:var(--${sel})">
       <div class="ls-txt"><b>${W.mech}</b> · ${W.desc}<br><span class="wp"><b>${l.power.name}</b> (2🔷): ${l.power.text}</span>
         ${ok?'':`<br><span class="bad">Talia ${S.decks[sel].length}/${RULES.deckSize}${neutralCount(sel)>RULES.neutralMax?' · za dużo neutralnych':''}: popraw w Tworzeniu talii</span>`}</div>
+      <div class="lvl"><small>Poziom AI</small><div class="seg">${Object.entries(AI_LEVELS).map(([k,n])=>`<button class="${aiLevel()===k?'on':''}" data-act="ai-level" data-l="${k}">${n}</button>`).join('')}</div><small>Wygrana: +${RULES.winByLevel[aiLevel()]} 🔹</small></div>
       <button class="btn" data-act="pick-world" data-w="${sel}">${ok?'Graj':'Popraw talię'}</button>
     </div></div>`;
 }
@@ -355,7 +356,7 @@ const isLandscape=()=>true;
 function startGame(w){
   S.lastWorld=w;persist();
   const aiW=pick(PLAYABLE.filter(x=>x!==w));
-  createGame(w,S.decks[w],aiW,starterDeckOf(aiW));
+  createGame(w,S.decks[w],aiW,starterDeckOf(aiW),aiLevel());
   G.mull=new Set();
   screen='game';render();
 }
@@ -374,7 +375,8 @@ function mullHTML(){
 }
 HOOKS.toast=m=>toast(m);
 HOOKS.banner=m=>banner(m);
-HOOKS.gameOver=o=>{o.rw=RULES.reward[o.res];S.shards+=o.rw;if(o.res==='win')S.wins++;if(o.res==='lose')S.losses++;persist()};
+const aiLevel=()=>AI_LEVELS[S.aiLevel]?S.aiLevel:'normal';
+HOOKS.gameOver=o=>{o.rw=o.res==='win'?RULES.winByLevel[G.lv[1]]||RULES.reward.win:RULES.reward[o.res];S.shards+=o.rw;if(o.res==='win')S.wins++;if(o.res==='lose')S.losses++;persist()};
 
 /* ---------- render gry ---------- */
 function targetKeys(){
@@ -395,7 +397,7 @@ function leaderBar(p,tg,myTurn){
     :`<div class="epow">${WORLDS[pl.world].n}<br>Ręka: ${pl.hand.length} · Talia ${pl.deck.length}</div>`;
   return `<div class="lb ${p?'lb-e':'lb-m'}">
     <div class="por ${tg.has(k)?'tgt':''}" data-tgt="${k}" data-k="${k}" data-leader="${p}" style="--u:var(--${L.world})">${L.icon}${a?artImg(a):''}<span class="hp">${pl.hp}</span>${pl.armor?`<span class="ar">${pl.armor}</span>`:''}</div>
-    <div class="li"><b>${p?'AI · ':''}${L.name}</b><div class="mana"><b>${pl.mana}/${pl.max}</b>${crys}</div>
+    <div class="li"><b>${p?`AI ${AI_LEVELS[G.lv[1]]} · `:''}${L.name}</b><div class="mana"><b>${pl.mana}/${pl.max}</b>${crys}</div>
     <small>${mechStatus(p)} · ${p?`Ręka ${pl.hand.length} · `:''}Talia ${pl.deck.length}</small></div>${right}</div>`;
 }
 function unitHTML(u,owner,tg,myTurn){
@@ -431,13 +433,14 @@ function renderGame(){
     const nm=G.pending.kind==='bc'?G.pending.name:me.leader.power.name;
     mid=`<div class="pend">🎯 ${nm}: wybierz cel</div><button class="smallb" data-act="cancel">${G.pending.kind==='bc'?'Pomiń':'Anuluj'}</button>`;
   } else {
-    mid=`<button class="smallb" data-act="gmenu" aria-label="Menu gry">☰</button><div class="log">${G.log||''}</div>
+    mid=`<button class="smallb" data-act="gmenu" aria-label="Menu gry">☰</button><button class="log" data-act="hist" aria-label="Historia walki">${G.log||''}<i>📜 historia</i></button>
       <button class="endb ${anyMove?'':'hot'}" data-act="end" ${myTurn&&!G.busy?'':'disabled'}>${G.busy?'Tura AI…':'Koniec tury'}</button>`;
   }
   let over='';
   if(G.phase==='mulligan'){over=mullHTML()}
+  else if(G.histOpen){over=`<div class="ov hist" data-act="hist"><h2>Historia walki</h2><div class="hl" data-act="noop">${[...G.hist].reverse().map(h=>h.sep?`<div class="hs">${h.m}</div>`:`<div class="${h.dead?'hd':''}">${h.m}</div>`).join('')||'<div>Jeszcze nic się nie wydarzyło.</div>'}</div><button class="btn sec" data-act="hist">Zamknij</button></div>`}
   else if(G.over){const r=G.over.res;over=`<div class="ov"><h2>${r==='win'?'Zwycięstwo!':r==='lose'?'Porażka':'Remis'}</h2><p>+${G.over.rw} 🔹 odłamków (masz ${S.shards})</p>
-    <div class="col"><button class="btn" data-act="again">Jeszcze raz</button><button class="btn sec" data-act="packs">Paczki</button><button class="btn sec" data-act="menu">Menu</button></div></div>`}
+    <div class="col"><button class="btn" data-act="again">Jeszcze raz</button><button class="btn sec" data-act="hist">Historia walki</button><button class="btn sec" data-act="packs">Paczki</button><button class="btn sec" data-act="menu">Menu</button></div></div>`}
   else if(G.menu){over=`<div class="ov"><h2>Pauza</h2><div class="col"><button class="btn" data-act="gmenu">Wróć do gry</button><button class="btn sec" data-act="${G.menu==='sure'?'surrender2':'surrender'}">${G.menu==='sure'?'Na pewno? Dotknij jeszcze raz':'Poddaj się'}</button></div></div>`}
   else if(G.preview){const pc=CARD[G.preview]||(TOKENS[G.preview]&&{...TOKENS[G.preview],cost:0,rarity:'C'});over=`<div class="ov">${cardFace(pc,'lg')}<p>Dotknij, aby zamknąć</p></div>`}
   app.innerHTML=`<div class="game">
@@ -607,6 +610,8 @@ function doAct(act,ds){
     case 'mull-toggle': {const i=+ds.i;G.mull.has(i)?G.mull.delete(i):G.mull.add(i);render();break}
     case 'mull-ok': if(G&&G.phase==='mulligan')finishMulligan();break;
     case 'gmenu': G.menu=G.menu?false:true;render();break;
+    case 'hist': if(G){G.histOpen=!G.histOpen;render()}break;
+    case 'ai-level': S.aiLevel=ds.l;persist();render();break;
     case 'surrender': G.menu='sure';render();break;
     case 'surrender2': G.menu=false;G.p[0].hp=0;cleanup();render();break;
   }

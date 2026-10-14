@@ -163,7 +163,8 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 2px var(--hp),0 0 4px var(--hp)}50%{box-shadow:0 0 0 3px var(--hp),0 0 14px var(--hp)}}
 
 .mid{display:flex;align-items:center;gap:8px;min-height:44px;border-block:1px solid var(--line);padding-block:4px}
-.mid .log{flex:1;min-width:0;font-size:13px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mid .log{flex:1;min-width:0;font-size:13px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:none;border:0;padding:0;text-align:left}
+.mid .log i{display:block;font-style:normal;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--brass);margin-top:3px}
 .mid .pend{flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--brass)}
 .endb{font-family:var(--display);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:15px;padding:9px 14px;border-radius:6px;border:1px solid #e3c88d55;background:linear-gradient(180deg,#d4b46f,#a8843f);color:#16120a;flex:none}
 .endb.hot{animation:glow 1.4s ease-in-out infinite}
@@ -236,6 +237,19 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .ptxt b{color:var(--brass)}
 .code{width:100%;font:12px/1.4 ui-monospace,Menlo,monospace;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px;resize:vertical;word-break:break-all;-webkit-user-select:text;user-select:text}
 .code:focus{outline:1px solid var(--brass)}
+/* ---------- historia walki i poziom AI ---------- */
+.ov.hist{justify-content:flex-start}
+.hl{width:min(560px,100%);flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:3px;font-size:14px;line-height:1.35;padding:8px 12px;background:var(--panel);border:1px solid var(--line);border-radius:8px;-webkit-user-select:text;user-select:text}
+.hl .hs{margin-top:8px;padding-top:6px;border-top:1px solid var(--line);font-family:var(--display);font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-size:13px;color:var(--brass)}
+.hl .hs:first-child{margin-top:0;border-top:0;padding-top:0}
+.hl .hd{color:#ff8f88}
+.lvl{display:flex;flex-direction:column;gap:4px;flex:none;align-items:center}
+.lvl small{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}
+.seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{border:0;background:var(--bg);padding:7px 9px;font-size:12px;font-weight:600}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button.on{background:#c9a45c22;color:var(--brass)}
+
 /* ---------- animacje stołu ---------- */
 .unit.enter{animation:enter .42s cubic-bezier(.2,1.4,.4,1) both}
 @keyframes enter{0%{transform:translateY(-26px) scale(1.35);opacity:0}60%{opacity:1}100%{transform:none}}

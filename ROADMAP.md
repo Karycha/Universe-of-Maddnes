@@ -40,10 +40,10 @@ Legenda: ✅ zrobione · 🔨 w trakcie · ⏳ zaplanowane · 💭 do decyzji
 
 ## Etap 2 — Czytelność i balans ⏳
 - ✅ Animacje: atak (wyskok do celu i powrót), wejście jednostki, śmierć jednostki, karta przeciwnika pokazana na środku
-- Historia walki (rozwijany log tury)
+- ✅ Historia walki (stuknij log na stole: tury, zagrania, ataki ze statystykami, zgony)
 - ✅ Mulligan na starcie (wymiana kart z ręki; AI oddaje karty 5+ many)
 - Samouczek pierwszej partii
-- Poziomy AI: Łatwy / Normalny / Trudny (Trudny liczy zabójcze ciągi i wymiany)
+- ✅ Poziomy AI: Łatwy / Normalny / Trudny (Trudny: myślenie na kopii stołu przy atakach i kartach, dobijanie zaklęciami; wygrywa ~62% z Normalnym, Łatwy ~11%); nagroda za wygraną 35/60/90 🔹
 - ✅ Symulator balansu AI vs AI (`node tools/sim.js`) — win-rate światów
 - ✅ Balans światów wg symulatora (v0.8: Śródziemie 48%, Gwiezdne Wojny 51%, Marvel 48%, Naruto 53%; wcześniej 54/78/40/28) + mądrzejsze użycie zdolności Lidera przez AI
 - Symulator: win-rate pojedynczych kart

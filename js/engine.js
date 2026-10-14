@@ -19,7 +19,9 @@ function mkPlayer(world,deck){return {world,leader:leaderOf(world),hp:RULES.lead
 function mkUnit(c){const kw=[...(c.kw||[])];return {uid:UID++,id:c.id,name:c.name,icon:c.icon,world:c.world,src:c.src,race:c.race,atk:c.atk,hp:c.hp,maxHp:c.hp,baseAtk:c.atk,baseHp:c.hp,kw,canAttack:kw.includes('charge'),attacked:false,frozen:false,webbed:false}}
 const worldKey=u=>u.src||u.world;
 function fx(k,t,c){G.fxq.push({k,t,c})}
-function setLog(m){G.log=m}
+function setLog(m){G.log=m;if(G.hist)G.hist.push({m})}
+const who=p=>p?'Przeciwnik':'Ty';
+const tname=t=>!t?'':t.kind==='leader'?(t.p?'wrogi Lider':'twój Lider'):t.u.name;
 function findUnit(uid){for(let p=0;p<2;p++){const u=G.p[p].board.find(x=>x.uid===uid);if(u)return {u,p}}return null}
 const keyOf=t=>t.kind==='leader'?'L'+t.p:'U'+t.u.uid;
 function parseKey(k){if(!k)return null;if(k[0]==='L')return {kind:'leader',p:+k.slice(1)};const f=findUnit(+k.slice(1));return f?{kind:'unit',u:f.u,p:f.p}:null}
@@ -94,19 +96,19 @@ function applyFx(p,e,target,src){
 }
 function draw(p){
   const pl=G.p[p];
-  if(!pl.deck.length){pl.fat++;damageLeader(p,pl.fat);setLog(`${p?'AI':'Ty'}: pusta talia, -${pl.fat} HP`);return}
+  if(!pl.deck.length){pl.fat++;damageLeader(p,pl.fat);setLog(`${who(p)}: pusta talia, -${pl.fat} HP`);return}
   const id=pl.deck.pop();
   if(pl.hand.length>=RULES.handMax){if(p===0)HOOKS.toast(`Pełna ręka: ${CARD[id].name} przepada`);return}
   pl.hand.push({uid:UID++,id});
 }
 function cleanup(){
-  for(const pl of G.p)pl.board=pl.board.filter(u=>u.hp>0);
+  G.p.forEach((pl,q)=>{pl.board.filter(u=>u.hp<=0).forEach(u=>G.hist&&G.hist.push({m:`💀 ${u.name} (${who(q)}) ginie`,dead:1}));pl.board=pl.board.filter(u=>u.hp>0)});
   if(G.sel&&!findUnit(G.sel))G.sel=null;
   if(G.pending&&G.pending.src&&!findUnit(G.pending.src)&&G.pending.eff.fx.startsWith('self'))G.pending=null;
   const a=G.p[0].hp<=0,b=G.p[1].hp<=0;
   if((a||b)&&!G.over){
     G.over={res:a&&b?'draw':b?'win':'lose'};G.pending=null;G.sel=null;
-    HOOKS.gameOver(G.over);
+    if(!G.sim)HOOKS.gameOver(G.over);
   }
 }
 function gainForce(p){const pl=G.p[p];pl.force++;fx('L'+p,`✦ Moc ${pl.force}`,'info')}
@@ -114,7 +116,7 @@ function playCard(p,idx,target){
   const pl=G.p[p], c=CARD[pl.hand[idx].id];
   if(G.over||G.turn!==p||!canPlay(p,c))return false;
   pl.mana-=costOf(p,c);pl.hand.splice(idx,1);
-  setLog(`${p?'AI':'Ty'}: ${c.name}`);
+  setLog(`${who(p)}: ${c.name}${target?' → '+tname(target):''}`);
   if(c.force)gainForce(p);
   if(c.type==='unit'){
     const u=mkUnit(c);pl.board.push(u);
@@ -143,8 +145,8 @@ function attack(p,uid,t){
   const u=f.u;if(!u.canAttack)return false;
   if(!validAttack(p).map(keyOf).includes(keyOf(t)))return false;
   u.canAttack=false;u.attacked=true;
-  if(t.kind==='leader'){damageLeader(t.p,u.atk);setLog(`${u.name} bije Lidera za ${u.atk}`)}
-  else{const d=t.u;damageUnit(d,u.atk);damageUnit(u,d.atk);setLog(`${u.name} ⚔ ${d.name}`)}
+  if(t.kind==='leader'){damageLeader(t.p,u.atk);setLog(`${u.name} (${who(p)}) bije Lidera za ${u.atk}`)}
+  else{const d=t.u;damageUnit(d,u.atk);damageUnit(u,d.atk);setLog(`${u.name} ${u.atk}/${u.hp+d.atk} ⚔ ${d.name} ${d.atk}/${d.hp+u.atk} (${who(p)} atakuje)`)}
   cleanup();return true;
 }
 function usePower(p,t){
@@ -154,10 +156,11 @@ function usePower(p,t){
   if(pw.fx==='summon'&&pl.board.length>=RULES.boardMax)return false;
   pl.mana-=RULES.powerCost;pl.powerUsed=true;
   applyFx(p,pw,t,null);if(pw.force)gainForce(p);
-  setLog(`${p?'AI':'Ty'}: ${pw.name}`);cleanup();return true;
+  setLog(`${who(p)}: ${pw.name}${t?' → '+tname(t):''}`);cleanup();return true;
 }
 function startTurn(p){
-  const pl=G.p[p];G.turn=p;
+  const pl=G.p[p];G.turn=p;G.turnNo=(G.turnNo||0)+1;
+  if(G.hist)G.hist.push({sep:1,m:`Tura ${Math.ceil(G.turnNo/2)} · ${who(p)}`});
   pl.max=Math.min(RULES.maxMana,pl.max+1);pl.mana=pl.max;pl.powerUsed=false;pl.heroes=0;
   pl.madness=worldsOn(p)>=3;
   if(pl.madness){pl.mana++;fx('L'+p,'MADNESS +1 mana','info')}
@@ -172,9 +175,9 @@ function nextTurn(){
   startTurn(1-G.turn);
 }
 /* Nowa gra: gracz 0 = człowiek (dół), 1 = AI. Zwraca, kto zaczyna. */
-function createGame(w,deck,aiW,aiDeck){
+function createGame(w,deck,aiW,aiDeck,level='normal'){
   const first=Math.random()<.5?0:1;
-  G={p:[mkPlayer(w,deck),mkPlayer(aiW,aiDeck)],turn:first,first,phase:'mulligan',over:null,busy:false,pending:null,sel:null,preview:null,menu:false,log:'',fxq:[]};
+  G={p:[mkPlayer(w,deck),mkPlayer(aiW,aiDeck)],turn:first,first,phase:'mulligan',lv:['normal',level],hist:[],turnNo:0,over:null,busy:false,pending:null,sel:null,preview:null,menu:false,log:'',fxq:[]};
   for(let i=0;i<3;i++)draw(first);for(let i=0;i<4;i++)draw(1-first);
   G.log=`${WORLDS[w].n} vs ${WORLDS[aiW].n}. ${first===0?'Zaczynasz!':'Zaczyna przeciwnik, masz dodatkową kartę.'}`;
   return first;
@@ -188,7 +191,54 @@ function mulligan(p,idxs){
   return back.length;
 }
 /* AI zostawia tanie karty, oddaje drogie (5+ many). */
-function aiMulligan(p){mulligan(p,G.p[p].hand.map((h,i)=>CARD[h.id].cost>=5?i:-1).filter(i=>i>=0))}
+const lvl=p=>(G.lv&&G.lv[p])||'normal';
+function aiMulligan(p){if(lvl(p)==='easy')return;mulligan(p,G.p[p].hand.map((h,i)=>CARD[h.id].cost>=5?i:-1).filter(i=>i>=0))}
+/* Wybór karty wg poziomu: Łatwy losowo (czasem pasuje), Normalny najdroższa, Trudny najlepszy zestaw na całą manę. */
+function aiPickCard(p){
+  const me=G.p[p], L=lvl(p);
+  const opts=me.hand.map((h,i)=>({c:CARD[h.id],i})).filter(o=>canPlay(p,o.c)&&aiWants(o.c,p));
+  if(!opts.length)return null;
+  if(L==='easy')return Math.random()<.15?null:pick(opts);
+  if(L==='hard'){
+    // 1 krok w przód: każda karta × każdy cel na kopii gry; premia za wydaną manę
+    const base=evalState(p);let bestO=null,bestS=base+.01;
+    for(const o of opts){
+      const c=o.c, needT=c.type==='spell'&&TARGETED.has(c.play.t);
+      const targets=needT?validTargets(c.play.t,p).map(keyOf):[null];
+      for(const k of targets){
+        const s=scoreAfter(p,()=>{playCard(p,o.i,k?parseKey(k):null);
+          if(G.pending){const pd=G.pending;G.pending=null;const tt=aiTarget(pd.eff,p);if(tt)applyFx(p,pd.eff,tt,pd.src);cleanup()}})+HARD_W.mana*costOf(p,c);
+        if(s>bestS){bestS=s;bestO={...o,t:k}}
+      }
+    }
+    if(bestO)return bestO;
+    let best=null,bestScore=-1;const n=Math.min(opts.length,9),room=RULES.boardMax-me.board.length;
+    for(let m=1;m<(1<<n);m++){
+      let cost=0,units=0;const set=[];
+      for(let k=0;k<n;k++)if(m>>k&1){const c=opts[k].c;cost+=costOf(p,c);if(c.type==='unit')units++;set.push(opts[k])}
+      if(cost>me.mana||units>room)continue;
+      const score=cost*10+units;if(score>bestScore){bestScore=score;best=set}
+    }
+    if(!best)return null;
+    // najpierw karty bez warunków (budują Zbiórkę/Drużynę/Klony), potem warunkowe i Kurama
+    best.sort((a,b)=>((a.c.cond||a.c.costMod)?1:0)-((b.c.cond||b.c.costMod)?1:0)||costOf(p,b.c)-costOf(p,a.c));
+    return best[0];
+  }
+  return opts.sort((a,b)=>costOf(p,b.c)-costOf(p,a.c))[0];
+}
+/* Trudny: jeśli obrażenia z tablicy + zaklęcia w ręce + zdolność zabijają Lidera, najpierw dobija zaklęciami. */
+function* aiLethal(p){
+  const me=G.p[p], op=G.p[1-p], o=1-p;
+  const taunt=op.board.some(u=>u.kw.includes('taunt'));
+  const board=taunt?0:me.board.filter(u=>u.canAttack).reduce((s,u)=>s+u.atk,0);
+  const burn=me.hand.map((h,i)=>({c:CARD[h.id],i})).filter(x=>x.c.type==='spell'&&x.c.play.fx==='dmg'&&(x.c.play.t==='any'||x.c.play.t==='enemyLeader')&&typeof x.c.play.n==='number');
+  let mana=me.mana,dmg=board;const use=[];
+  burn.sort((a,b)=>b.c.play.n/b.c.cost-a.c.play.n/a.c.cost).forEach(x=>{if(costOf(p,x.c)<=mana){mana-=costOf(p,x.c);dmg+=x.c.play.n;use.push(x.c.id)}});
+  const pw=me.leader.power, pwDmg=!me.powerUsed&&pw.fx==='dmg'&&mana>=RULES.powerCost?pw.n:0;
+  if(dmg+pwDmg<op.hp+op.armor||!use.length&&!pwDmg)return;
+  for(const id of use){const i=me.hand.findIndex(h=>h.id===id);if(i<0||G.over)continue;yield {kind:'preplay',id};playCard(p,i,{kind:'leader',p:o});yield 'play'}
+  if(pwDmg&&!G.over&&usePower(p,{kind:'leader',p:o}))yield 'power';
+}
 function beginGame(){G.phase='play';startTurn(G.first)}
 
 /* ---------- AI ---------- */
@@ -212,11 +262,42 @@ function aiWants(c,p=1){
   }
   return true;
 }
+/* Ocena stołu z perspektywy p (Trudne AI): życie, siła jednostek, prowokacje. */
+const HARD_W={face:.8,mine:1,theirs:1.3,taunt:1.5,hp:.9,mana:.5};
+function evalState(p){
+  const me=G.p[p],op=G.p[1-p];
+  if(op.hp<=0)return 1e4; if(me.hp<=0)return -1e4;
+  const W=HARD_W,val=b=>b.reduce((s,u)=>s+u.atk+u.hp*W.hp+(u.kw.includes('taunt')?W.taunt:0),0);
+  return W.face*((me.hp+me.armor)-(op.hp+op.armor))+W.mine*val(me.board)-W.theirs*val(op.board);
+}
+/* Wynik po wykonaniu fn na kopii gry (prawdziwa gra nietknięta). */
+function scoreAfter(p,fn){
+  const saved=G;G=JSON.parse(JSON.stringify(saved,(k,v)=>k==='hist'||k==='fxq'?undefined:v));G.sim=true;G.fxq=[];
+  let s;try{fn();s=evalState(p)}finally{G=saved}
+  return s;
+}
+function aiAttackHard(u,p){
+  const op=G.p[1-p], vt=validAttack(p), leader=vt.find(t=>t.kind==='leader');
+  const ready=G.p[p].board.filter(x=>x.canAttack).reduce((s,x)=>s+x.atk,0);
+  if(leader&&ready>=op.hp+op.armor)return leader;
+  let best=null,bs=-Infinity;
+  // cel przekazujemy jako klucz i odtwarzamy w kopii gry — inaczej symulacja raniłaby prawdziwe jednostki
+  for(const t of vt){const k=keyOf(t);const s=scoreAfter(p,()=>attack(p,u.uid,parseKey(k)));if(s>bs){bs=s;best=t}}
+  return best;
+}
 function aiAttackTarget(u,p=1){
+  if(lvl(p)==='hard')return aiAttackHard(u,p);
   const vt=validAttack(p), op=G.p[1-p], leader=vt.find(t=>t.kind==='leader');
   const ready=G.p[p].board.filter(x=>x.canAttack).reduce((s,x)=>s+x.atk,0);
   if(leader&&ready>=op.hp+op.armor)return leader;
   const units=vt.filter(t=>t.kind==='unit');
+  if(lvl(p)==='hard'){
+    const me=G.p[p], threat=op.board.reduce((s,x)=>s+x.atk,0);
+    // obrona: przeciwnik może nas dobić w następnej turze → zabijamy jego najgroźniejsze jednostki, nawet kosztem własnych
+    if(threat>=me.hp+me.armor-2){const kill=units.filter(t=>t.u.hp<=u.atk).sort((a,b)=>b.u.atk-a.u.atk)[0];if(kill)return kill}
+    // darmowe zabicie groźnej jednostki zawsze przed biciem w Lidera
+    const free=units.filter(t=>t.u.hp<=u.atk&&t.u.atk<u.hp&&t.u.atk>=2).sort((a,b)=>b.u.atk-a.u.atk)[0];if(free)return free;
+  }
   const clean=units.filter(t=>t.u.hp<=u.atk&&t.u.atk<u.hp).sort((a,b)=>b.u.atk-a.u.atk)[0];if(clean)return clean;
   const trade=units.filter(t=>t.u.hp<=u.atk&&(t.u.atk+t.u.hp)>(u.atk+u.hp)+1).sort((a,b)=>b.u.atk-a.u.atk)[0];if(trade)return trade;
   if(leader)return leader;
@@ -236,21 +317,23 @@ function* aiTurnSteps(p=1){
   const hasKurama=me.hand.some(h=>CARD[h.id].costMod==='clones');
   const wantsAssemble=me.world==='marvel'&&me.heroes===0&&me.hand.some(h=>{const c=CARD[h.id];return c.cond&&c.cond.type==='assemble'&&costOf(p,c)<=me.mana-RULES.powerCost});
   if((me.world==='naruto'&&hasKurama)||wantsAssemble)yield* power();
+  if(lvl(p)==='hard')yield* aiLethal(p);
   for(let g=0;g<12&&!G.over;g++){
-    const opts=me.hand.map((h,i)=>({c:CARD[h.id],i})).filter(o=>canPlay(p,o.c)&&aiWants(o.c,p)).sort((a,b)=>costOf(p,b.c)-costOf(p,a.c));
-    if(!opts.length)break;
-    const {c,i}=opts[0];
-    const t=c.type==='spell'&&TARGETED.has(c.play.t)?aiTarget(c.play,p):null;
+    const o=aiPickCard(p);
+    if(!o)break;
+    const {c,i}=o;
+    const t=o.t!==undefined?(o.t?parseKey(o.t):null):(c.type==='spell'&&TARGETED.has(c.play.t)?aiTarget(c.play,p):null);
     yield {kind:'preplay',id:c.id};
     playCard(p,i,t);
     if(G.pending){const pd=G.pending;G.pending=null;const tt=aiTarget(pd.eff,p);if(tt)applyFx(p,pd.eff,tt,pd.src);cleanup()}
     yield 'play';
   }
-  yield* power();
-  for(const u of [...me.board]){
+  if(lvl(p)!=='easy'||Math.random()<.5)yield* power();
+  const order=lvl(p)==='hard'?[...me.board].sort((a,b)=>b.atk-a.atk):[...me.board];
+  for(const u of order){
     if(G.over)break;
     if(!findUnit(u.uid)||!u.canAttack||u.atk<=0)continue;
-    const t=aiAttackTarget(u,p);if(!t)continue;
+    const t=lvl(p)==='easy'&&Math.random()<.6?pick(validAttack(p)):aiAttackTarget(u,p);if(!t)continue;
     yield {kind:'preattack',uid:u.uid,t};
     if(G.over)break;
     attack(p,u.uid,t);yield 'attack';
