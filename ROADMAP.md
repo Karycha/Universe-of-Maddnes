@@ -26,13 +26,13 @@ Legenda: ✅ zrobione · 🔨 w trakcie · ⏳ zaplanowane · 💭 do decyzji
 - ✅ 61 kart, osobna talia na świat, wybór świata przed grą
 - ⏳ Kolejne światy: Dragon Ball, DC, One Piece jako pełne frakcje (dziś karty neutralne)
 
-## Etap 1 — Fundamenty web 🔨
+## Etap 1 — Fundamenty web ✅
 - ✅ Repo + GitHub Pages
 - ✅ Stonowany wygląd (ciemny stół, mosiężne wykończenia, kolory uniwersów jako akcenty)
 - ✅ System grafik kart: pole `art` w danych, pliki w `art/`, emoji jako zapas
 - ✅ Grafiki z API (Wikipedia, Superhero API, Jikan) do prywatnych testów
-- ⏳ Rozbicie na pliki: `cards.js` (dane), `engine.js` (zasady), `ui.js` (widok)
-- ⏳ Eksport/import zapisu kolekcji (kod do skopiowania), bo zapis siedzi tylko w przeglądarce
+- ✅ Rozbicie na pliki: `js/cards.js` (dane), `js/engine.js` (zasady, bez DOM), `js/ui.js` (widok), `style.css`
+- ✅ Eksport/import zapisu kolekcji (kod `UM2:…` do skopiowania)
 
 ## Etap 2 — Czytelność i balans ⏳
 - Animacje: atak (lot jednostki do celu), śmierć jednostki, zagranie karty
@@ -40,7 +40,9 @@ Legenda: ✅ zrobione · 🔨 w trakcie · ⏳ zaplanowane · 💭 do decyzji
 - Mulligan na starcie (wymiana kart z ręki)
 - Samouczek pierwszej partii
 - Poziomy AI: Łatwy / Normalny / Trudny (Trudny liczy zabójcze ciągi i wymiany)
-- Symulator balansu: AI vs AI × 1000 partii, win-rate Liderów i kart
+- ✅ Symulator balansu AI vs AI (`node tools/sim.js`) — win-rate światów
+- Balans światów wg symulatora (v0.4: Gwiezdne Wojny 78%, Śródziemie 54%, Marvel 40%, Naruto 28%)
+- Symulator: win-rate pojedynczych kart
 - Ustawienia: dźwięk, szybkość animacji, wibracje
 
 ## Etap 3 — Treść ⏳
