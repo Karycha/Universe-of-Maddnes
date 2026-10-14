@@ -1,7 +1,9 @@
 # Universe Madness
 
 Crossoverowa karcianka 1v1 — bohaterowie z Fantasy, Sci-Fi, Komiksów i Anime w jednej talii.
-To jest webowa wersja testowa (czysty HTML/CSS/JS, bez frameworków), pod telefon — najlepiej poziomo, dodana do ekranu początkowego.
+To jest webowa wersja testowa (czysty HTML/CSS/JS, bez frameworków), pod telefon w poziomie (najlepiej dodana do ekranu początkowego).
+
+Przy aktualizacji podbij `APP_VERSION` w `js/ui.js`, `version.json` i `?v=` w `index.html` — gra sama przeładuje się u graczy.
 
 **Graj:** https://karycha.github.io/universe-of-maddnes/
 

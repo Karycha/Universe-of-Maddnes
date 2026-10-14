@@ -282,18 +282,19 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .ls-txt{flex:1;min-width:0;font-size:13px;line-height:1.4}
 .ls-txt>b{color:var(--brass)}.ls-txt .wp{color:var(--mut)}.ls-txt .bad{color:#ff7a72;font-weight:600}
 .ls-info .btn{flex:none;min-width:120px}
+/* pion wyłączony: zamiast gry ekran „Obróć telefon” */
+#rotate{display:none}
 @media (orientation:portrait){
-  .mm-mid{flex-direction:column;gap:14px}
-  .mm-hero{max-width:none;flex:none}
-  .mm-fan{flex-wrap:wrap;justify-content:center;gap:10px}
-  .mc{--h:min(190px,34vh)}.mc.main{--h:min(210px,38vh)}
-  .mm-cur small{display:none}.mm-badge{display:none}
-  .ls-row{flex-wrap:wrap}.lc{--h:min(180px,30vh)}
-  .ls-info{flex-direction:column;align-items:stretch}
+  #rotate{display:flex;position:fixed;inset:0;z-index:999;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:24px;background:var(--bg);color:var(--fg)}
+  #rotate .ph{width:64px;height:110px;border:3px solid var(--brass);border-radius:12px;animation:rot 2.2s ease-in-out infinite}
+  #rotate b{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:.1em;text-transform:uppercase}
+  #rotate p{margin:0;color:var(--mut);font-size:14px;max-width:300px;line-height:1.45}
+  #app{visibility:hidden}
 }
+@keyframes rot{0%,20%{transform:rotate(0)}50%,80%{transform:rotate(-90deg)}100%{transform:rotate(0)}}
 
 /* ---------- telefon poziomo: układ stołu jak w Hearthstonie ---------- */
-@media (orientation:landscape) and (max-height:560px){
+@media (orientation:landscape){
   #app{max-width:1100px}
   .game{grid-template-columns:150px minmax(0,1fr) 96px;grid-template-rows:minmax(0,1fr) minmax(0,1fr) 92px;
     grid-template-areas:"elb eb mid" "mlb mb mid" "mlb hand mid";gap:6px 10px;padding-block:6px}

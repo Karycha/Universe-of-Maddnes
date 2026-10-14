@@ -1,4 +1,11 @@
 /* Universe Madness — WIDOK: ekrany, karty, dotyk, paczki, kolekcja, zapis. */
+const APP_VERSION='0.7';   // przy każdej aktualizacji podbij tu i w version.json (i ?v= w index.html)
+/* Auto-aktualizacja: telefon trzyma starą stronę w pamięci podręcznej, więc sprawdzamy version.json bez cache. */
+(function(){try{fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{
+  if(j&&j.v&&j.v!==APP_VERSION&&!location.search.includes('v='+j.v))location.replace('./?v='+j.v);}).catch(()=>{})}catch(e){}})();
+/* Android (apka z ekranu głównego): próbujemy zablokować poziom. iOS na to nie pozwala — tam jest ekran „Obróć telefon”. */
+document.addEventListener('pointerdown',function lockOnce(){document.removeEventListener('pointerdown',lockOnce);
+  try{screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape').catch(()=>{})}catch(e){}});
 const app = document.getElementById('app');
 const sleep = ms=>new Promise(r=>setTimeout(r,ms));
 function fxText(p){
@@ -140,7 +147,7 @@ function renderMenu(){
         ${menuCard('packs','Paczki','thanos','🎴')}
       </div>
     </div>
-    <div class="mm-bot"><span class="note">v0.6 · menu</span>
+    <div class="mm-bot"><span class="note">v${APP_VERSION}</span>
       <span class="mm-icons"><button class="ib" data-act="rules" aria-label="Zasady">📖</button><button class="ib" data-act="save" aria-label="Zapis">💾</button></span></div>
   </div>`;
 }
@@ -287,10 +294,9 @@ async function runAI(){
   if(!G.over)endTurnUI();else render();
 }
 function endTurnUI(){nextTurn();render();if(G.turn===1&&!G.over)runAI()}
-const isLandscape=()=>matchMedia('(orientation: landscape) and (max-height: 560px)').matches;
+const isLandscape=()=>true;
 function startGame(w){
   S.lastWorld=w;persist();
-  if(matchMedia('(orientation: portrait)').matches)toast('Obróć telefon poziomo: tak gra się najwygodniej ↻');
   const aiW=pick(PLAYABLE.filter(x=>x!==w));
   const first=createGame(w,S.decks[w],aiW,starterDeckOf(aiW));
   screen='game';render();
