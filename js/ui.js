@@ -1,5 +1,5 @@
 /* Universe Madness — WIDOK: ekrany, karty, dotyk, paczki, kolekcja, zapis. */
-const APP_VERSION='0.7.1';   // przy każdej aktualizacji podbij tu i w version.json (i ?v= w index.html)
+const APP_VERSION='0.7.2';   // przy każdej aktualizacji podbij tu i w version.json (i ?v= w index.html)
 /* Auto-aktualizacja: telefon trzyma starą stronę w pamięci podręcznej, więc sprawdzamy version.json bez cache. */
 (function(){try{fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{
   if(j&&j.v&&j.v!==APP_VERSION&&!location.search.includes('v='+j.v))location.replace('./?v='+j.v);}).catch(()=>{})}catch(e){}})();
@@ -53,36 +53,51 @@ function cardFace(c,size,extra='',cost){
 }
 
 /* ---------- grafiki z API (mapa ART_SRC jest w cards.js) ---------- */
-const ART_KEY='universe-madness-art-v1';
+const ART_KEY='universe-madness-art-v2';
 let ART={};
 try{ART=JSON.parse(localStorage.getItem(ART_KEY))||{}}catch(e){}
 function artSrc(c){if(!c)return null;if(c.art)return c.art===true?`art/${c.id}.webp`:c.art;return ART[c.id]||null}
 const artImg=a=>`<img class="art" src="${a}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.remove('has-art');this.remove()">`;
-async function fetchJSON(u){const r=await fetch(u);if(!r.ok)throw new Error(r.status);return r.json()}
+/* fetch z limitem czasu: jedno zawieszone zapytanie nie blokuje reszty */
+function fetchJSON(u,ms=9000){
+  const ctl=typeof AbortController!=='undefined'?new AbortController():null;
+  const t=setTimeout(()=>ctl&&ctl.abort(),ms);
+  return fetch(u,ctl?{signal:ctl.signal}:{}).then(r=>{if(!r.ok)throw new Error(String(r.status));return r.json()}).finally(()=>clearTimeout(t));
+}
 let HEROES=null;
 async function findArt([src,q]){
-  if(src==='wiki'){const d=await fetchJSON(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(q)}`);return (d.thumbnail&&d.thumbnail.source)||(d.originalimage&&d.originalimage.source)||''}
-  if(src==='hero'){if(!HEROES)HEROES=await fetchJSON('https://cdn.jsdelivr.net/gh/akabab/superhero-api@0.3.0/api/all.json');
+  if(src==='wiki'){ // API MediaWiki: pilicense=any oddaje też obrazki z filmów/komiksów (REST summary dawał tylko wolne licencje)
+    const d=await fetchJSON(`https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&prop=pageimages&piprop=thumbnail&pithumbsize=500&pilicense=any&titles=${encodeURIComponent(q)}`);
+    const p=d.query&&d.query.pages?Object.values(d.query.pages)[0]:null;return (p&&p.thumbnail&&p.thumbnail.source)||''}
+  if(src==='hero'){if(!HEROES)HEROES=await fetchJSON('https://cdn.jsdelivr.net/gh/akabab/superhero-api@0.3.0/api/all.json',15000);
     const h=HEROES.find(x=>x.name.toLowerCase()===q.toLowerCase());return h?h.images.lg||h.images.md:''}
-  if(src==='jikan'){await sleep(450);const d=await fetchJSON(`https://api.jikan.moe/v4/characters?q=${encodeURIComponent(q)}&order_by=favorites&sort=desc&limit=1`);
+  if(src==='jikan'){
+    const url=`https://api.jikan.moe/v4/characters?q=${encodeURIComponent(q)}&order_by=favorites&sort=desc&limit=1`;
+    let d;try{d=await fetchJSON(url)}catch(e){if(e.message!=='429')throw e;await sleep(2000);d=await fetchJSON(url)}
     const c=d.data&&d.data[0];return c?(c.images.webp&&c.images.webp.image_url)||c.images.jpg.image_url:''}
   return '';
 }
-const ART_STATUS={busy:false,done:0,total:0};
+const ART_STATUS={busy:false,done:0,total:0,fail:0};
 let artTimer=null;
 function artRefresh(){clearTimeout(artTimer);artTimer=setTimeout(()=>{if(!drag&&screen!=='game')render()},350)}
 async function resolveArt(){
+  if(ART_STATUS.busy)return;
   const todo=Object.entries(ART_SRC).filter(([id])=>ART[id]===undefined);
   if(!todo.length)return;
-  Object.assign(ART_STATUS,{busy:true,done:0,total:todo.length});artRefresh();
-  for(const [id,spec] of todo){
+  Object.assign(ART_STATUS,{busy:true,done:0,total:todo.length,fail:0});artRefresh();
+  const one=async([id,spec])=>{
     try{ART[id]=await findArt(spec);try{localStorage.setItem(ART_KEY,JSON.stringify(ART))}catch(e){}}
-    catch(e){/* offline albo limit API: spróbuje przy następnym uruchomieniu */}
+    catch(e){ART_STATUS.fail++} // spróbuje przy następnym uruchomieniu
     ART_STATUS.done++;artRefresh();
-  }
+  };
+  // trzy źródła równolegle; Jikan (MyAnimeList) ma limit zapytań, więc tam po kolei z przerwą
+  const by=s=>todo.filter(([,spec])=>spec[0]===s);
+  const wiki=by('wiki'), hero=by('hero'), jikan=by('jikan');
+  const pool=async(list,n)=>{let k=0;await Promise.all(Array.from({length:n},async()=>{while(k<list.length)await one(list[k++])}))};
+  await Promise.all([pool(wiki,4),pool(hero,2),(async()=>{for(const x of jikan){await one(x);await sleep(700)}})()]);
   ART_STATUS.busy=false;artRefresh();
 }
-const artNote=()=>ART_STATUS.busy?`<p class="note">Pobieram grafiki ${ART_STATUS.done}/${ART_STATUS.total}…</p>`:'';
+const artNote=()=>ART_STATUS.busy?`<p class="note">Pobieram grafiki ${ART_STATUS.done}/${ART_STATUS.total}${ART_STATUS.fail?` · nieudane ${ART_STATUS.fail}`:''}…</p>`:'';
 const backFace = size=>`<div class="card ${size} back"><span class="bk">UM</span></div>`;
 
 /* ---------- zapis kolekcji ---------- */
@@ -198,6 +213,8 @@ function renderSave(){
       <textarea class="code" id="imp" rows="4" placeholder="UM2:…"></textarea>
       <button class="btn ${SV.confirm?'':'sec'}" data-act="import" style="width:100%;margin-top:8px">${SV.confirm?'Na pewno? Dotknij, żeby nadpisać':'Wczytaj zapis'}</button>
       ${SV.msg?`<p class="note" style="margin-top:8px">${SV.msg}</p>`:''}</section>
+    <section><h3>Grafiki</h3><p>Mam ${Object.values(ART).filter(Boolean).length}/${Object.keys(ART_SRC).length} grafik postaci. Jeśli któraś się nie pobrała albo wygląda źle, pobierz wszystkie od nowa.</p>
+      <button class="btn sec" data-act="art-reset" style="width:100%;margin-top:8px">Pobierz grafiki od nowa</button>${artNote()}</section>
   </div></div>`;
 }
 
@@ -484,6 +501,7 @@ function doAct(act,ds){
     case 'pick-world': if(deckOk(ds.w))startGame(ds.w);else{CV.tab='deck';CV.deckWorld=ds.w;screen='coll';render()}break;
     case 'rules': screen='rules';render();break;
     case 'save': SV={confirm:false,msg:''};screen='save';render();break;
+    case 'art-reset': if(!ART_STATUS.busy){ART={};try{localStorage.removeItem(ART_KEY)}catch(e){}resolveArt();toast('Pobieram grafiki od nowa')}render();break;
     case 'copy-save': {const ta=document.getElementById('exp');const fallback=()=>{ta.focus();ta.select();toast('Zaznaczone: skopiuj ręcznie')};
       try{navigator.clipboard.writeText(ta.value).then(()=>toast('Skopiowano kod zapisu'),fallback)}catch(e){fallback()}break}
     case 'import': {const v=document.getElementById('imp').value;let d;

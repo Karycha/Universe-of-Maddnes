@@ -4,7 +4,7 @@ Domyślnie gra przy pierwszym uruchomieniu pobiera linki do grafik z Wikipedii, 
 
 Własny plik z tego folderu (`art:true` w karcie) ma pierwszeństwo przed grafiką z API. Jak nie ma ani jednego, ani drugiego, gra pokazuje emoji.
 
-Żeby wymusić ponowne pobranie grafik: usuń dane strony w przeglądarce (albo klucz `universe-madness-art-v1` w localStorage).
+Żeby pobrać grafiki od nowa: w grze **Zapis → Pobierz grafiki od nowa**.
 
 ## Jak dodać grafikę do karty
 
