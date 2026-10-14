@@ -19,11 +19,18 @@ Legenda: ✅ zrobione · 🔨 w trakcie · ⏳ zaplanowane · 💭 do decyzji
 - ✅ Budowanie talii (20 kart, max 2 kopie, Legendarna 1)
 - ✅ Sterowanie dotykiem: przeciąganie kart i ataków
 
+## Etap 0.5 — Światy (v0.3) ✅
+- ✅ Frakcje w stylu Gwinta: talia = jeden świat + max 6 neutralnych
+- ✅ Śródziemie (Drużyna), Gwiezdne Wojny (Moc), Marvel (Zbiórka), Naruto (Klony)
+- ✅ Multiwersum (neutralne) i Madness za 3+ światy na stole
+- ✅ 61 kart, osobna talia na świat, wybór świata przed grą
+- ⏳ Kolejne światy: Dragon Ball, DC, One Piece jako pełne frakcje (dziś karty neutralne)
+
 ## Etap 1 — Fundamenty web 🔨
 - ✅ Repo + GitHub Pages
 - ✅ Stonowany wygląd (ciemny stół, mosiężne wykończenia, kolory uniwersów jako akcenty)
 - ✅ System grafik kart: pole `art` w danych, pliki w `art/`, emoji jako zapas
-- ⏳ Grafiki dla 16 kart startowych i 4 Liderów (patrz `art/README.md`)
+- ✅ Grafiki z API (Wikipedia, Superhero API, Jikan) do prywatnych testów
 - ⏳ Rozbicie na pliki: `cards.js` (dane), `engine.js` (zasady), `ui.js` (widok)
 - ⏳ Eksport/import zapisu kolekcji (kod do skopiowania), bo zapis siedzi tylko w przeglądarce
 
