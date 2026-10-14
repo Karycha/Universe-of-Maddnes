@@ -123,7 +123,7 @@ function renderMenu(){
       <button class="btn sec" data-act="save">Zapis: eksport / import</button>
     </div>
     ${artNote()}<div class="stats"><span>Wygrane <b>${S.wins}</b></span><span>Porażki <b>${S.losses}</b></span><span>Pył <b>✨ ${S.dust}</b></span></div>
-    <p class="note" style="opacity:.6">v0.4 · światy</p>
+    <p class="note" style="opacity:.6">v0.4.1 · 7 miejsc</p>
   </div>`;
 }
 function renderLeaders(){

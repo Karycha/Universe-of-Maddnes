@@ -103,7 +103,7 @@ const LEADERS = [
   {id:'naruto', name:'Naruto Uzumaki',world:'naruto',icon:'🍥',power:{name:'Kage Bunshin',fx:'summon',token:'klon',n:1,text:'Przyzywa Klona 1/1.'}},
 ];
 const RAR = {C:{n:'Zwykła',craft:30,mill:5,max:2},R:{n:'Rzadka',craft:80,mill:20,max:2},E:{n:'Epicka',craft:200,mill:50,max:2},L:{n:'Legendarna',craft:800,mill:200,max:1}};
-const RULES = {leaderHp:20,maxMana:10,boardMax:5,handMax:8,deckSize:20,neutralMax:6,powerCost:2,packCost:100,reward:{win:60,lose:25,draw:30}};
+const RULES = {leaderHp:20,maxMana:10,boardMax:7,handMax:8,deckSize:20,neutralMax:6,powerCost:2,packCost:100,reward:{win:60,lose:25,draw:30}};
 
 /* ---------- grafiki z zewnętrznych API (prywatne testy) ----------
    wiki = Wikipedia (tytuł artykułu), hero = Superhero API (nazwa), jikan = MyAnimeList (nazwa postaci) */
