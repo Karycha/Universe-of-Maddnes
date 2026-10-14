@@ -19,13 +19,19 @@ Własny plik z tego folderu (`art:true` w karcie) ma pierwszeństwo przed grafik
 
 Możesz też podać własną ścieżkę: `art:'art/inne/naruto-v2.png'`.
 
-## Lista id (talia startowa + Liderzy)
+## Lista id
 
-Liderzy: `gandalf`, `vader`, `batman`, `goku`
+Liderzy: `gandalf`, `vader`, `fury`, `naruto`
 
-Karty: `gollum`, `grogu`, `legolas`, `kapitan`, `naruto`, `spidey`, `t800`, `luffy`, `wonder`, `smaug`, `godzilla`, `kame`, `senzu`, `serum`, `armia`, `gwiazda`
+Śródziemie: `gollum`, `sam`, `frodo`, `legolas`, `gimli`, `urukhai`, `galadriela`, `aragorn`, `smaug`, `sauron`, `armia`, `pierscien`
 
-Z paczek: `gimli`, `aragorn`, `sauron`, `ripley`, `xeno`, `optimus`, `deadpool`, `thor`, `thanos`, `zoro`, `vegeta`, `saitama`, `rasengan`, `tarcza`, `pierscien`, `rozkaz66`
+Gwiezdne Wojny: `grogu`, `szturmowiec`, `r2d2`, `obiwan`, `han`, `chewie`, `luke`, `yoda`, `palpatine`, `miecz`, `gwiazda`, `rozkaz66`
+
+Marvel: `hawkeye`, `wdowa`, `kapitan`, `deadpool`, `spidey`, `ironman`, `hulk`, `thor`, `thanos`, `serum`, `tarcza`, `avengers`
+
+Naruto: `hinata`, `sakura`, `rocklee`, `shikamaru`, `kakashi`, `sasuke`, `gaara`, `itachi`, `kurama`, `rasengan`, `armiaklonow`
+
+Multiwersum: `goku`, `vegeta`, `kame`, `senzu`, `batman`, `wonder`, `t800`, `ripley`, `xeno`, `godzilla`, `optimus`, `luffy`, `zoro`, `saitama`
 
 ## Skąd brać grafiki
 
