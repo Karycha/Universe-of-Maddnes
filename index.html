@@ -47,6 +47,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 /* ---------- screens ---------- */
 .scr{height:100%;display:flex;flex-direction:column;gap:12px;padding-block:12px}
 .scr .body{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:14px;padding-bottom:16px}
+.scr .body>*{flex:none}
 .hdr{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line);padding-bottom:10px}
 .hdr h2{font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:.08em;text-transform:uppercase;margin:0;flex:1;min-width:0}
 
@@ -103,7 +104,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
   font-family:var(--display);font-weight:700;font-size:1.05em;background:#101216;color:#fff}
 .card .ca{left:.15em;border:.08em solid var(--atk)}
 .card .ch{right:.15em;border:.08em solid var(--hp)}
-.card .sp{position:absolute;left:50%;bottom:1em;transform:translateX(-50%);font-size:.48em;text-transform:uppercase;letter-spacing:.16em;font-weight:600;color:var(--mut);white-space:nowrap}
+.card .sp{position:absolute;left:50%;bottom:2.1em;transform:translateX(-50%);font-size:.48em;text-transform:uppercase;letter-spacing:.16em;font-weight:600;color:var(--mut);white-space:nowrap}
 .card.back{background:repeating-linear-gradient(45deg,#1a1d24 0 .3em,#15171d .3em .6em);border-color:var(--brass2)}
 .card.back::before{inset:.45em;height:auto;background:none;border:.05em solid var(--brass2);box-shadow:none}
 .card.back::after{display:none}
@@ -206,7 +207,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .tile{position:relative;background:none;border:0;padding:0}
 .tile.locked .card{filter:grayscale(1) brightness(.4)}
 .tile .own{position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:1px 8px;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
-.tile .ind{position:absolute;top:-6px;left:-4px;background:var(--brass);color:#16120a;border-radius:4px;padding:1px 6px;font-size:11px;font-weight:700}
+.tile .ind{position:absolute;top:-6px;right:-4px;background:var(--brass);color:#16120a;border-radius:4px;padding:1px 6px;font-size:11px;font-weight:700}
 .drows{display:flex;flex-direction:column;gap:5px}
 .drow{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--u)}
 .drow .dc{width:24px;height:24px;border-radius:50%;background:#121c2b;border:1px solid var(--brass2);color:#dbe8fa;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:14px;flex:none}
@@ -370,14 +371,21 @@ async function findArt([src,q]){
     const c=d.data&&d.data[0];return c?(c.images.webp&&c.images.webp.image_url)||c.images.jpg.image_url:''}
   return '';
 }
+const ART_STATUS={busy:false,done:0,total:0};
+let artTimer=null;
+function artRefresh(){clearTimeout(artTimer);artTimer=setTimeout(()=>{if(!drag&&screen!=='game')render()},350)}
 async function resolveArt(){
-  let changed=false;
-  for(const [id,spec] of Object.entries(ART_SRC)){
-    if(ART[id]!==undefined)continue;
-    try{ART[id]=await findArt(spec);changed=true}catch(e){/* offline albo limit API: spróbuje przy następnym uruchomieniu */}
+  const todo=Object.entries(ART_SRC).filter(([id])=>ART[id]===undefined);
+  if(!todo.length)return;
+  Object.assign(ART_STATUS,{busy:true,done:0,total:todo.length});artRefresh();
+  for(const [id,spec] of todo){
+    try{ART[id]=await findArt(spec);try{localStorage.setItem(ART_KEY,JSON.stringify(ART))}catch(e){}}
+    catch(e){/* offline albo limit API: spróbuje przy następnym uruchomieniu */}
+    ART_STATUS.done++;artRefresh();
   }
-  if(changed){try{localStorage.setItem(ART_KEY,JSON.stringify(ART))}catch(e){}if(!drag&&screen!=='game')render()}
+  ART_STATUS.busy=false;artRefresh();
 }
+const artNote=()=>ART_STATUS.busy?`<p class="note">Pobieram grafiki ${ART_STATUS.done}/${ART_STATUS.total}…</p>`:'';
 const backFace = size=>`<div class="card ${size} back"><span class="bk">UM</span></div>`;
 
 /* ---------- zapis kolekcji ---------- */
@@ -416,7 +424,8 @@ function renderMenu(){
       <button class="btn sec" data-act="coll">Kolekcja i talia</button>
       <button class="btn sec" data-act="rules">Zasady</button>
     </div>
-    <div class="stats"><span>Wygrane <b>${S.wins}</b></span><span>Porażki <b>${S.losses}</b></span><span>Pył <b>✨ ${S.dust}</b></span></div>
+    ${artNote()}<div class="stats"><span>Wygrane <b>${S.wins}</b></span><span>Porażki <b>${S.losses}</b></span><span>Pył <b>✨ ${S.dust}</b></span></div>
+    <p class="note" style="opacity:.6">v0.2</p>
   </div>`;
 }
 function renderLeaders(){
@@ -512,7 +521,7 @@ function renderColl(){
   }
   app.innerHTML=`<div class="scr">${header('Kolekcja')}
     <div class="tabs"><button class="${CV.tab==='coll'?'on':''}" data-act="tab" data-t="coll">Kolekcja</button><button class="${CV.tab==='deck'?'on':''}" data-act="tab" data-t="deck">Talia ${n}/${RULES.deckSize}</button></div>
-    <div class="body">${body}</div></div>${modal}`;
+    <div class="body">${artNote()}${body}</div></div>${modal}`;
 }
 
 /* =========================================================
