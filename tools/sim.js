@@ -8,7 +8,7 @@ vm.runInContext(`function starterDeckOf(w){const d=[];CARDS.forEach(c=>{if(c.wor
 
 const N = +process.argv[2] || 200;
 const run = vm.runInContext(`(function(a,b){
-  createGame(a,starterDeckOf(a),b,starterDeckOf(b));
+  createGame(a,starterDeckOf(a),b,starterDeckOf(b)); aiMulligan(0); aiMulligan(1); beginGame();
   let turns=0;
   while(!G.over&&turns<200){ for(const _ of aiTurnSteps(G.turn)){} if(!G.over)nextTurn(); turns++; }
   return {res:G.over?G.over.res:'timeout',turns};

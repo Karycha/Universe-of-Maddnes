@@ -1,5 +1,5 @@
 /* Universe Madness — WIDOK: ekrany, karty, dotyk, paczki, kolekcja, zapis. */
-const APP_VERSION='0.8';   // przy każdej aktualizacji podbij tu i w version.json (i ?v= w index.html)
+const APP_VERSION='0.9';   // przy każdej aktualizacji podbij tu i w version.json (i ?v= w index.html)
 /* Auto-aktualizacja: telefon trzyma starą stronę w pamięci podręcznej, więc sprawdzamy version.json bez cache. */
 (function(){try{fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{
   if(j&&j.v&&j.v!==APP_VERSION&&!location.search.includes('v='+j.v))location.replace('./?v='+j.v);}).catch(()=>{})}catch(e){}})();
@@ -315,9 +315,22 @@ const isLandscape=()=>true;
 function startGame(w){
   S.lastWorld=w;persist();
   const aiW=pick(PLAYABLE.filter(x=>x!==w));
-  const first=createGame(w,S.decks[w],aiW,starterDeckOf(aiW));
+  createGame(w,S.decks[w],aiW,starterDeckOf(aiW));
+  G.mull=new Set();
   screen='game';render();
-  if(first===1)runAI();
+}
+function finishMulligan(){
+  const n=mulligan(0,[...G.mull]);aiMulligan(1);G.mull=null;
+  if(n)toast(`Wymieniono ${n} ${n===1?'kartę':n<5?'karty':'kart'}`);
+  beginGame();render();
+  if(G.turn===1&&!G.over)runAI();
+}
+function mullHTML(){
+  const me=G.p[0];
+  return `<div class="ov mull"><h2>Wymiana kart</h2>
+    <p>${G.first===0?'Zaczynasz ty.':'Zaczyna przeciwnik, ty masz dodatkową kartę.'} Dotknij kart, które chcesz wymienić.</p>
+    <div class="prow">${me.hand.map((h,i)=>`<button class="slot ${G.mull.has(i)?'swap':''}" data-act="mull-toggle" data-i="${i}">${cardFace(CARD[h.id],'md')}${G.mull.has(i)?'<span class="mx">✕</span>':''}</button>`).join('')}</div>
+    <button class="btn" data-act="mull-ok">${G.mull.size?`Wymień ${G.mull.size} i graj`:'Zostaw rękę i graj'}</button></div>`;
 }
 HOOKS.toast=m=>toast(m);
 HOOKS.banner=m=>banner(m);
@@ -367,7 +380,8 @@ function renderGame(){
       <button class="endb ${anyMove?'':'hot'}" data-act="end" ${myTurn&&!G.busy?'':'disabled'}>${G.busy?'Tura AI…':'Koniec tury'}</button>`;
   }
   let over='';
-  if(G.over){const r=G.over.res;over=`<div class="ov"><h2>${r==='win'?'Zwycięstwo!':r==='lose'?'Porażka':'Remis'}</h2><p>+${G.over.rw} 🔹 odłamków (masz ${S.shards})</p>
+  if(G.phase==='mulligan'){over=mullHTML()}
+  else if(G.over){const r=G.over.res;over=`<div class="ov"><h2>${r==='win'?'Zwycięstwo!':r==='lose'?'Porażka':'Remis'}</h2><p>+${G.over.rw} 🔹 odłamków (masz ${S.shards})</p>
     <div class="col"><button class="btn" data-act="again">Jeszcze raz</button><button class="btn sec" data-act="packs">Paczki</button><button class="btn sec" data-act="menu">Menu</button></div></div>`}
   else if(G.menu){over=`<div class="ov"><h2>Pauza</h2><div class="col"><button class="btn" data-act="gmenu">Wróć do gry</button><button class="btn sec" data-act="${G.menu==='sure'?'surrender2':'surrender'}">${G.menu==='sure'?'Na pewno? Dotknij jeszcze raz':'Poddaj się'}</button></div></div>`}
   else if(G.preview){const pc=CARD[G.preview]||(TOKENS[G.preview]&&{...TOKENS[G.preview],cost:0,rarity:'C'});over=`<div class="ov">${cardFace(pc,'lg')}<p>Dotknij, aby zamknąć</p></div>`}
@@ -405,7 +419,7 @@ app.addEventListener('pointerdown',e=>{
   swallow=false;
   if(screen!=='game'||!G)return;
   if(G.preview){G.preview=null;swallow=true;render();return}
-  if(G.over||G.menu||G.busy||G.turn!==0||G.pending)return;
+  if(G.phase==='mulligan'||G.over||G.menu||G.busy||G.turn!==0||G.pending)return;
   const h=e.target.closest('[data-hand]'), u=e.target.closest('.unit[data-owner="0"]');
   if(h)drag={kind:'hand',idx:+h.dataset.hand,el:h,x0:e.clientX,y0:e.clientY,moved:false};
   else if(u){const f=findUnit(+u.dataset.uid);if(f&&f.u.canAttack)drag={kind:'unit',uid:+u.dataset.uid,el:u,x0:e.clientX,y0:e.clientY,moved:false}}
@@ -465,7 +479,7 @@ app.addEventListener('click',e=>{
   if(swallow){swallow=false;return}
   const a=e.target.closest('[data-act]');
   if(a)return doAct(a.dataset.act,a.dataset);
-  if(screen!=='game'||!G||G.over||G.menu)return;
+  if(screen!=='game'||!G||G.over||G.menu||G.phase==='mulligan')return;
   const t=e.target.closest('[data-tgt]');
   if(G.pending){
     if(!t)return;
@@ -532,6 +546,8 @@ function doAct(act,ds){
       else{if(!usePower(0,null))toast('Stół jest pełny');render()}
       break;}
     case 'cancel': G.pending=null;render();break;
+    case 'mull-toggle': {const i=+ds.i;G.mull.has(i)?G.mull.delete(i):G.mull.add(i);render();break}
+    case 'mull-ok': if(G&&G.phase==='mulligan')finishMulligan();break;
     case 'gmenu': G.menu=G.menu?false:true;render();break;
     case 'surrender': G.menu='sure';render();break;
     case 'surrender2': G.menu=false;G.p[0].hp=0;cleanup();render();break;

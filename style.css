@@ -236,6 +236,14 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .ptxt b{color:var(--brass)}
 .code{width:100%;font:12px/1.4 ui-monospace,Menlo,monospace;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px;resize:vertical;word-break:break-all;-webkit-user-select:text;user-select:text}
 .code:focus{outline:1px solid var(--brass)}
+/* ---------- mulligan ---------- */
+.ov.mull{gap:12px}
+.ov.mull h2{font-size:28px}
+.ov.mull .prow{gap:10px}
+.ov.mull .card.md{font-size:min(15px,calc((100vh - 170px) / 9.8))}
+.slot.swap .card{filter:grayscale(.8) brightness(.45)}
+.slot .mx{position:absolute;inset:0;display:grid;place-items:center;font-size:42px;color:#ff6b62;text-shadow:0 2px 6px #000;pointer-events:none}
+
 /* ---------- menu w stylu Gwinta ---------- */
 .mm{position:relative;height:100%;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;gap:10px;padding-block:10px;overflow:hidden;isolation:isolate}
 .mm-bg{position:absolute;left:-10%;top:-10%;width:70%;height:120%;object-fit:cover;object-position:center 25%;filter:blur(18px) saturate(.8);opacity:.28;z-index:-1;

@@ -169,13 +169,23 @@ function nextTurn(){
 }
 /* Nowa gra: gracz 0 = człowiek (dół), 1 = AI. Zwraca, kto zaczyna. */
 function createGame(w,deck,aiW,aiDeck){
-  G={p:[mkPlayer(w,deck),mkPlayer(aiW,aiDeck)],turn:0,over:null,busy:false,pending:null,sel:null,preview:null,menu:false,log:'',fxq:[]};
   const first=Math.random()<.5?0:1;
+  G={p:[mkPlayer(w,deck),mkPlayer(aiW,aiDeck)],turn:first,first,phase:'mulligan',over:null,busy:false,pending:null,sel:null,preview:null,menu:false,log:'',fxq:[]};
   for(let i=0;i<3;i++)draw(first);for(let i=0;i<4;i++)draw(1-first);
   G.log=`${WORLDS[w].n} vs ${WORLDS[aiW].n}. ${first===0?'Zaczynasz!':'Zaczyna przeciwnik, masz dodatkową kartę.'}`;
-  startTurn(first);
   return first;
 }
+/* Mulligan: wybrane karty wracają do talii, w ich miejsce dobierasz nowe (nie te same). */
+function mulligan(p,idxs){
+  const pl=G.p[p], back=[];
+  [...new Set(idxs)].sort((a,b)=>b-a).forEach(i=>{if(pl.hand[i])back.push(pl.hand.splice(i,1)[0].id)});
+  for(let i=0;i<back.length;i++)draw(p);
+  pl.deck.push(...back);shuffle(pl.deck);
+  return back.length;
+}
+/* AI zostawia tanie karty, oddaje drogie (5+ many). */
+function aiMulligan(p){mulligan(p,G.p[p].hand.map((h,i)=>CARD[h.id].cost>=5?i:-1).filter(i=>i>=0))}
+function beginGame(){G.phase='play';startTurn(G.first)}
 
 /* ---------- AI ---------- */
 function aiTarget(e,p){

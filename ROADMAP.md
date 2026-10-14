@@ -41,7 +41,7 @@ Legenda: ✅ zrobione · 🔨 w trakcie · ⏳ zaplanowane · 💭 do decyzji
 ## Etap 2 — Czytelność i balans ⏳
 - Animacje: atak (lot jednostki do celu), śmierć jednostki, zagranie karty
 - Historia walki (rozwijany log tury)
-- Mulligan na starcie (wymiana kart z ręki)
+- ✅ Mulligan na starcie (wymiana kart z ręki; AI oddaje karty 5+ many)
 - Samouczek pierwszej partii
 - Poziomy AI: Łatwy / Normalny / Trudny (Trudny liczy zabójcze ciągi i wymiany)
 - ✅ Symulator balansu AI vs AI (`node tools/sim.js`) — win-rate światów
