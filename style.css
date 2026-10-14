@@ -39,7 +39,8 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .hdr{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line);padding-bottom:10px}
 .hdr h2{font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:.08em;text-transform:uppercase;margin:0;flex:1;min-width:0}
 
-.menu{justify-content:center;align-items:stretch;gap:24px}
+.menu{justify-content:flex-start;align-items:stretch;gap:24px;overflow-y:auto}
+.menu>:first-child{margin-top:auto}.menu>:last-child{margin-bottom:auto}
 .logo{text-align:center;line-height:.9}
 .logo .u{font-family:var(--display);font-weight:600;font-size:15px;letter-spacing:.6em;padding-left:.6em;color:var(--brass)}
 .logo .m{display:block;font-family:var(--display);font-weight:700;font-size:clamp(52px,17vw,78px);letter-spacing:.04em;color:var(--fg);margin-top:4px;text-shadow:0 3px 0 #000}
@@ -135,13 +136,13 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .pow[disabled]{opacity:.35;border-color:var(--line)}
 .epow{margin-left:auto;font-size:11px;color:var(--mut);text-align:right;max-width:100px}
 
-.board{display:flex;justify-content:center;align-items:center;gap:4px;border-radius:8px;padding:6px 4px;min-width:0;position:relative;
+.board{container-type:inline-size;display:flex;justify-content:center;align-items:center;gap:4px;border-radius:8px;padding:6px 4px;min-width:0;position:relative;
   background:#ffffff05;border:1px solid #ffffff0c}
 .board.mine{background:#ffffff07}
 .board.drop{outline:1px dashed var(--brass);outline-offset:-4px}
 .board .empty{color:#ffffff2a;font-size:13px;letter-spacing:.12em;text-transform:uppercase;font-family:var(--display);font-weight:600}
 /* 7 jednostek w rzędzie: kafelek skaluje się do szerokości ekranu (max 58px), wnętrze w em */
-.unit{--uw:min(58px,calc((min(100vw,520px) - 66px) / 7));position:relative;width:var(--uw);height:calc(var(--uw) * 1.31);font-size:calc(var(--uw) * .1724);flex:none;border-radius:6px;overflow:visible;
+.unit{--uw:min(58px,calc((100cqw - 28px) / 7));position:relative;width:var(--uw);height:calc(var(--uw) * 1.31);font-size:calc(var(--uw) * .1724);flex:none;border-radius:6px;overflow:visible;
   background:radial-gradient(circle at 50% 38%,color-mix(in srgb,var(--u) 70%,#000),color-mix(in srgb,var(--u) 20%,#0b0c10) 85%);
   border:1px solid color-mix(in srgb,var(--u) 55%,#000);box-shadow:inset 0 0 0 1px #ffffff12,0 3px 8px #000a;transition:transform .15s}
 .unit .art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:5px}
@@ -195,6 +196,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .ov h2{font-family:var(--display);font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-size:40px;margin:0;color:var(--fg)}
 .ov .col{display:flex;flex-direction:column;gap:10px;width:min(300px,100%)}
 .modal{display:flex;flex-direction:column;align-items:center;gap:12px;width:min(340px,100%)}
+.mside{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%}
 .mbt{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
 .mbt .btn{font-size:14px;padding:11px 8px}
 
@@ -234,4 +236,36 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .ptxt b{color:var(--brass)}
 .code{width:100%;font:12px/1.4 ui-monospace,Menlo,monospace;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px;resize:vertical;word-break:break-all;-webkit-user-select:text;user-select:text}
 .code:focus{outline:1px solid var(--brass)}
+/* ---------- telefon poziomo: układ stołu jak w Hearthstonie ---------- */
+@media (orientation:landscape) and (max-height:560px){
+  #app{max-width:1100px}
+  .game{grid-template-columns:150px minmax(0,1fr) 96px;grid-template-rows:minmax(0,1fr) minmax(0,1fr) 92px;
+    grid-template-areas:"elb eb mid" "mlb mb mid" "mlb hand mid";gap:6px 10px;padding-block:6px}
+  .lb-e{grid-area:elb}.lb-m{grid-area:mlb}.board.enemy{grid-area:eb}.board.mine{grid-area:mb}.mid{grid-area:mid}.hand{grid-area:hand}
+  .lb{flex-direction:column;align-items:flex-start;justify-content:center;gap:5px;padding:0;min-height:0}
+  .lb .li{flex:none;width:100%}
+  .lb .li small{white-space:normal;line-height:1.3}
+  .lb-e .por{width:40px;height:40px;font-size:21px}
+  .lb-e .mana i{display:none}
+  .lb-e .li small{font-size:10px}
+  .lb-e .li b{font-size:15px}
+  .pow{margin-left:0;max-width:none;width:100%}
+  .epow{display:none}
+  .board{container-type:size}
+  .unit{--uw:min(68px,calc((100cqw - 28px) / 7),calc((100cqh - 18px) / 1.31))}
+  .mid{flex-direction:column;justify-content:center;align-items:stretch;gap:10px;border:0;border-left:1px solid var(--line);padding:0 0 0 10px;min-height:0}
+  .mid .log{white-space:normal;flex:none;max-height:7.5em;overflow:hidden;font-size:12px;line-height:1.25}
+  .mid .pend{flex:none;font-size:13px}
+  .endb{padding:16px 6px;font-size:16px}
+  .menu{display:grid;grid-template-columns:1fr 1fr;align-content:center;column-gap:28px;row-gap:12px}
+  .menu>*{grid-column:1;margin:0!important}
+  .menu .mbtns{grid-column:2;grid-row:1 / span 6;align-self:center}
+  .logo .m{font-size:clamp(40px,8vw,64px)}
+  .worlds{display:grid;grid-template-columns:1fr 1fr}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(112px,1fr))}
+  .ov h2{font-size:30px}
+  .ov .card.lg{font-size:min(32px,calc((100vh - 70px) / 9.8))}
+  .modal{flex-direction:row;align-items:center;justify-content:center;gap:18px;width:min(700px,100%)}
+  .mside{width:min(340px,100%)}
+}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition:none!important}}

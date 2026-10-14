@@ -123,7 +123,7 @@ function renderMenu(){
       <button class="btn sec" data-act="save">Zapis: eksport / import</button>
     </div>
     ${artNote()}<div class="stats"><span>Wygrane <b>${S.wins}</b></span><span>Porażki <b>${S.losses}</b></span><span>Pył <b>✨ ${S.dust}</b></span></div>
-    <p class="note" style="opacity:.6">v0.4.1 · 7 miejsc</p>
+    <p class="note" style="opacity:.6">v0.5 · poziom</p>
   </div>`;
 }
 function renderLeaders(){
@@ -239,7 +239,7 @@ function renderColl(){
   let modal='';
   if(CV.open){
     const c=CARD[CV.open], r=RAR[c.rarity], o=owned(c.id), tw=c.world==='neutral'?dw:c.world, d=inDeck(c.id,tw);
-    modal=`<div class="ov" data-act="close"><div class="modal" data-act="noop">${cardFace(c,'lg')}
+    modal=`<div class="ov" data-act="close"><div class="modal" data-act="noop">${cardFace(c,'lg')}<div class="mside">
       <p>Masz ${o}/${r.max} · w talii ${WORLDS[tw].n}: ${d} · Pył ✨ ${S.dust}</p>
       <div class="mbt">
         <button class="btn" data-act="add" data-id="${c.id}" ${canAddTo(c.id,tw)?'':'disabled'}>Do talii +</button>
@@ -247,7 +247,7 @@ function renderColl(){
         <button class="btn sec" data-act="craft" data-id="${c.id}" ${o<r.max&&S.dust>=r.craft?'':'disabled'}>Stwórz −${r.craft}✨</button>
         <button class="btn sec" data-act="mill" data-id="${c.id}" ${o?'':'disabled'}>Rozbij +${r.mill}✨</button>
       </div>${c.world==='neutral'?`<p>Neutralna: trafia do talii ${WORLDS[dw].n} (zmień w zakładce Talie)</p>`:''}
-      <button class="btn sec" data-act="close" style="width:100%">Zamknij</button></div></div>`;
+      <button class="btn sec" data-act="close" style="width:100%">Zamknij</button></div></div></div>`;
   }
   app.innerHTML=`<div class="scr">${header('Kolekcja')}
     <div class="tabs"><button class="${CV.tab==='coll'?'on':''}" data-act="tab" data-t="coll">Kolekcja</button><button class="${CV.tab==='deck'?'on':''}" data-act="tab" data-t="deck">Talie</button></div>
@@ -265,7 +265,9 @@ async function runAI(){
   if(!G.over)endTurnUI();else render();
 }
 function endTurnUI(){nextTurn();render();if(G.turn===1&&!G.over)runAI()}
+const isLandscape=()=>matchMedia('(orientation: landscape) and (max-height: 560px)').matches;
 function startGame(w){
+  if(matchMedia('(orientation: portrait)').matches)toast('Obróć telefon poziomo: tak gra się najwygodniej ↻');
   const aiW=pick(PLAYABLE.filter(x=>x!==w));
   const first=createGame(w,S.decks[w],aiW,starterDeckOf(aiW));
   screen='game';render();
@@ -292,10 +294,10 @@ function leaderBar(p,tg,myTurn){
   const right=p===0
     ?`<button class="pow" data-act="power" ${myTurn&&!G.busy&&!pl.powerUsed&&pl.mana>=RULES.powerCost&&!G.pending?'':'disabled'}><span>${L.power.name}</span><i>2🔷</i></button>`
     :`<div class="epow">${WORLDS[pl.world].n}<br>Ręka: ${pl.hand.length} · Talia ${pl.deck.length}</div>`;
-  return `<div class="lb">
+  return `<div class="lb ${p?'lb-e':'lb-m'}">
     <div class="por ${tg.has(k)?'tgt':''}" data-tgt="${k}" data-k="${k}" data-leader="${p}" style="--u:var(--${L.world})">${L.icon}${a?artImg(a):''}<span class="hp">${pl.hp}</span>${pl.armor?`<span class="ar">${pl.armor}</span>`:''}</div>
     <div class="li"><b>${p?'AI · ':''}${L.name}</b><div class="mana"><b>${pl.mana}/${pl.max}</b>${crys}</div>
-    <small>${mechStatus(p)}${p?'':` · Talia ${pl.deck.length}`}</small></div>${right}</div>`;
+    <small>${mechStatus(p)} · ${p?`Ręka ${pl.hand.length} · `:''}Talia ${pl.deck.length}</small></div>${right}</div>`;
 }
 function unitHTML(u,owner,tg,myTurn){
   const k='U'+u.uid; u.art=artSrc(CARD[u.id]||TOKENS[u.id]);
@@ -309,7 +311,7 @@ function unitHTML(u,owner,tg,myTurn){
 function renderGame(){
   const me=G.p[0], ai=G.p[1], myTurn=G.turn===0&&!G.over, tg=targetKeys();
   const anyMove=myTurn&&(me.hand.some(h=>canPlay(0,CARD[h.id]))||me.board.some(u=>u.canAttack)||(!me.powerUsed&&me.mana>=2));
-  const W=Math.max(200,app.clientWidth), n=me.hand.length, cw=64, step=n>1?Math.min(68,(W-cw)/(n-1)):0;
+  const W=Math.max(200,app.clientWidth-(isLandscape()?262:0)), n=me.hand.length, cw=64, step=n>1?Math.min(68,(W-cw)/(n-1)):0;
   let mid;
   if(G.pending){
     const nm=G.pending.kind==='bc'?G.pending.name:me.leader.power.name;
