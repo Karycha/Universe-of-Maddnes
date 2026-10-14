@@ -218,7 +218,10 @@ function* aiTurnSteps(p=1){
     if(TARGETED.has(pw.t)){t=aiTarget(pw,p);ok=!!t}
     if(ok&&usePower(p,t))yield 'power';
   };
-  if(me.world==='marvel'||me.world==='naruto')yield* power(); // Agent/Klony przed kartami: Zbiórka i tańszy Kurama
+  // Zdolność przed kartami tylko gdy realnie pomaga: Kurama w ręce (tańszy za Klony) albo Zbiórka do odpalenia.
+  const hasKurama=me.hand.some(h=>CARD[h.id].costMod==='clones');
+  const wantsAssemble=me.world==='marvel'&&me.heroes===0&&me.hand.some(h=>{const c=CARD[h.id];return c.cond&&c.cond.type==='assemble'&&costOf(p,c)<=me.mana-RULES.powerCost});
+  if((me.world==='naruto'&&hasKurama)||wantsAssemble)yield* power();
   for(let g=0;g<12&&!G.over;g++){
     const opts=me.hand.map((h,i)=>({c:CARD[h.id],i})).filter(o=>canPlay(p,o.c)&&aiWants(o.c,p)).sort((a,b)=>costOf(p,b.c)-costOf(p,a.c));
     if(!opts.length)break;

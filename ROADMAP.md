@@ -45,7 +45,7 @@ Legenda: ✅ zrobione · 🔨 w trakcie · ⏳ zaplanowane · 💭 do decyzji
 - Samouczek pierwszej partii
 - Poziomy AI: Łatwy / Normalny / Trudny (Trudny liczy zabójcze ciągi i wymiany)
 - ✅ Symulator balansu AI vs AI (`node tools/sim.js`) — win-rate światów
-- Balans światów wg symulatora (v0.4: Gwiezdne Wojny 78%, Śródziemie 54%, Marvel 40%, Naruto 28%)
+- ✅ Balans światów wg symulatora (v0.8: Śródziemie 48%, Gwiezdne Wojny 51%, Marvel 48%, Naruto 53%; wcześniej 54/78/40/28) + mądrzejsze użycie zdolności Lidera przez AI
 - Symulator: win-rate pojedynczych kart
 - Ustawienia: dźwięk, szybkość animacji, wibracje
 
