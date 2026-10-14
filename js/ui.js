@@ -111,30 +111,52 @@ const cur=()=>`<span class="cur">🔹 ${S.shards} · <i>✨ ${S.dust}</i></span>
 const header=t=>`<div class="hdr"><button class="ib" data-act="menu" aria-label="Wróć do menu">←</button><h2>${t}</h2>${cur()}</div>`;
 function render(){({menu:renderMenu,leaders:renderLeaders,rules:renderRules,pack:renderPack,coll:renderColl,save:renderSave,game:renderGame})[screen]()}
 
+/* ---------- menu główne w stylu Gwinta ---------- */
+const FEATURE={lotr:'aragorn',sw:'luke',marvel:'ironman',naruto:'kakashi'};
+const lastWorld=()=>PLAYABLE.includes(S.lastWorld)?S.lastWorld:'lotr';
+function menuCard(act,label,id,icon,cls=''){
+  const c=CARD[id]||LEADERS.find(l=>l.id===id), a=artSrc(c), w=c?c.world:'neutral';
+  return `<button class="mc ${cls}" data-act="${act}" style="--u:var(--${w})">
+    <span class="mc-art">${a?artImg(a):`<span class="mc-ico">${icon}</span>`}</span><span class="mc-l">${label}</span></button>`;
+}
 function renderMenu(){
-  app.innerHTML=`<div class="scr menu">
-    <div class="logo"><div class="u">UNIVERSE</div><span class="m">MADNESS</span><div class="bars"><i></i><i></i><i></i><i></i></div></div>
-    <p class="tag">Śródziemie, Gwiezdne Wojny, Marvel i Naruto. Wybierz świat i zbij Lidera wroga do zera.</p>
-    <div class="mbtns">
-      <button class="btn" data-act="play">Graj z AI</button>
-      <button class="btn sec" data-act="packs">Paczki · 🔹 ${S.shards}</button>
-      <button class="btn sec" data-act="coll">Kolekcja i talie</button>
-      <button class="btn sec" data-act="rules">Zasady</button>
-      <button class="btn sec" data-act="save">Zapis: eksport / import</button>
+  const lw=lastWorld(), L=leaderOf(lw), la=artSrc(L);
+  app.innerHTML=`<div class="mm" style="--u:var(--${lw})">
+    ${la?`<img class="mm-bg" src="${la}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">`:''}
+    <div class="mm-top">
+      <div class="mm-prof"><span class="mm-por" style="--u:var(--${lw})">${L.icon}${la?artImg(la):''}</span>
+        <span class="mm-name"><b>Gracz</b><small>${WORLDS[lw].n}</small></span>
+        <span class="mm-badge" title="Wygrane"><b>${S.wins}</b><small>wygr.</small></span>
+        <span class="mm-badge" title="Porażki"><b>${S.losses}</b><small>por.</small></span></div>
+      <div class="mm-cur"><span><b>${S.shards}</b><small>🔹 odłamki</small></span><span><b>${S.dust}</b><small>✨ pył</small></span>
+        <button class="mm-shop" data-act="packs">SKLEP</button></div>
     </div>
-    ${artNote()}<div class="stats"><span>Wygrane <b>${S.wins}</b></span><span>Porażki <b>${S.losses}</b></span><span>Pył <b>✨ ${S.dust}</b></span></div>
-    <p class="note" style="opacity:.6">v0.5 · poziom</p>
+    <div class="mm-mid">
+      <div class="mm-hero"><div class="logo"><div class="u">UNIVERSE</div><span class="m">MADNESS</span><div class="bars"><i></i><i></i><i></i><i></i></div></div>
+        <p class="tag">${WORLDS[lw].n} czeka. Ostatnio grałeś jako ${L.name}.</p>${artNote()}</div>
+      <div class="mm-fan">
+        ${menuCard('play','Gra',L.id,L.icon,'main')}
+        ${menuCard('coll','Tworzenie talii',FEATURE[lw],'🃏')}
+        ${menuCard('packs','Paczki','thanos','🎴')}
+      </div>
+    </div>
+    <div class="mm-bot"><span class="note">v0.6 · menu</span>
+      <span class="mm-icons"><button class="ib" data-act="rules" aria-label="Zasady">📖</button><button class="ib" data-act="save" aria-label="Zapis">💾</button></span></div>
   </div>`;
 }
+let LV={sel:null};
 function renderLeaders(){
-  app.innerHTML=`<div class="scr">${header('Wybierz świat')}<div class="body">
-    <div class="worlds">${PLAYABLE.map(w=>{const W=WORLDS[w],l=leaderOf(w),ok=deckOk(w),a=artSrc(l);
-      return `<button class="wt" data-act="pick-world" data-w="${w}" style="--u:var(--${w})" ${ok?'':'aria-disabled="true"'}>
-        <span class="lp">${l.icon}${a?artImg(a):''}</span>
-        <span class="wi"><small>${W.i} ${W.n}</small><b>${l.name}</b><em>${W.mech}</em><span>${W.desc}</span>
-        <span class="wp"><b>${l.power.name}</b> (2🔷): ${l.power.text}</span>
-        ${ok?'':`<span class="bad">Talia ${S.decks[w].length}/${RULES.deckSize}${neutralCount(w)>RULES.neutralMax?' · za dużo neutralnych':''}: popraw w Kolekcji</span>`}</span></button>`}).join('')}</div>
-    <p class="note">Przeciwnik dostaje losowy inny świat.</p></div></div>`;
+  const sel=LV.sel||lastWorld(), W=WORLDS[sel], l=leaderOf(sel), ok=deckOk(sel);
+  app.innerHTML=`<div class="scr ls">${header('Wybierz świat')}
+    <div class="ls-row">${PLAYABLE.map(w=>{const L=leaderOf(w),a=artSrc(L);
+      return `<button class="mc lc ${w===sel?'on':''}" data-act="sel-world" data-w="${w}" style="--u:var(--${w})">
+        <span class="mc-art">${a?artImg(a):`<span class="mc-ico">${L.icon}</span>`}</span>
+        <span class="mc-l">${L.name}<small>${WORLDS[w].i} ${WORLDS[w].n}</small></span></button>`}).join('')}</div>
+    <div class="ls-info" style="--u:var(--${sel})">
+      <div class="ls-txt"><b>${W.mech}</b> · ${W.desc}<br><span class="wp"><b>${l.power.name}</b> (2🔷): ${l.power.text}</span>
+        ${ok?'':`<br><span class="bad">Talia ${S.decks[sel].length}/${RULES.deckSize}${neutralCount(sel)>RULES.neutralMax?' · za dużo neutralnych':''}: popraw w Tworzeniu talii</span>`}</div>
+      <button class="btn" data-act="pick-world" data-w="${sel}">${ok?'Graj':'Popraw talię'}</button>
+    </div></div>`;
 }
 function renderRules(){
   app.innerHTML=`<div class="scr">${header('Zasady')}<div class="body rules">
@@ -267,6 +289,7 @@ async function runAI(){
 function endTurnUI(){nextTurn();render();if(G.turn===1&&!G.over)runAI()}
 const isLandscape=()=>matchMedia('(orientation: landscape) and (max-height: 560px)').matches;
 function startGame(w){
+  S.lastWorld=w;persist();
   if(matchMedia('(orientation: portrait)').matches)toast('Obróć telefon poziomo: tak gra się najwygodniej ↻');
   const aiW=pick(PLAYABLE.filter(x=>x!==w));
   const first=createGame(w,S.decks[w],aiW,starterDeckOf(aiW));
@@ -450,7 +473,8 @@ function doAct(act,ds){
   switch(act){
     case 'noop': return;
     case 'menu': screen='menu';G=null;if(PK&&PK.done)PK=null;render();break;
-    case 'play': case 'again': screen='leaders';G=null;render();break;
+    case 'play': case 'again': screen='leaders';LV.sel=null;G=null;render();break;
+    case 'sel-world': LV.sel=ds.w;render();break;
     case 'pick-world': if(deckOk(ds.w))startGame(ds.w);else{CV.tab='deck';CV.deckWorld=ds.w;screen='coll';render()}break;
     case 'rules': screen='rules';render();break;
     case 'save': SV={confirm:false,msg:''};screen='save';render();break;

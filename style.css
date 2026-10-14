@@ -236,6 +236,62 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .ptxt b{color:var(--brass)}
 .code{width:100%;font:12px/1.4 ui-monospace,Menlo,monospace;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px;resize:vertical;word-break:break-all;-webkit-user-select:text;user-select:text}
 .code:focus{outline:1px solid var(--brass)}
+/* ---------- menu w stylu Gwinta ---------- */
+.mm{position:relative;height:100%;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:10px;padding-block:10px;overflow:hidden;isolation:isolate}
+.mm-bg{position:absolute;left:-10%;top:-10%;width:70%;height:120%;object-fit:cover;object-position:center 25%;filter:blur(18px) saturate(.8);opacity:.28;z-index:-1;
+  -webkit-mask-image:radial-gradient(closest-side,#000 40%,transparent);mask-image:radial-gradient(closest-side,#000 40%,transparent)}
+.mm::before{content:"";position:absolute;inset:0;z-index:-2;background:radial-gradient(60% 70% at 25% 55%,color-mix(in srgb,var(--u) 30%,transparent),transparent 70%)}
+.mm-top{display:flex;justify-content:space-between;align-items:center;gap:10px;min-width:0}
+.mm-prof,.mm-cur{display:flex;align-items:center;gap:12px;min-width:0}
+.mm-por{position:relative;overflow:hidden;flex:none;width:46px;height:46px;border-radius:8px;display:grid;place-items:center;font-size:24px;background:radial-gradient(circle at 50% 40%,color-mix(in srgb,var(--u) 60%,#000),#0b0c10);border:2px solid var(--brass2)}
+.mm-por .art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 22%}
+.mm-name{display:flex;flex-direction:column;min-width:0}
+.mm-name b{font-family:var(--display);font-weight:700;font-size:20px;letter-spacing:.06em;text-transform:uppercase;line-height:1}
+.mm-name small{color:var(--mut);font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+.mm-badge{display:flex;flex-direction:column;align-items:center;justify-content:center;width:44px;height:46px;clip-path:polygon(0 0,100% 0,100% 72%,50% 100%,0 72%);background:linear-gradient(#2a3040,#1a1e28);border-top:2px solid var(--brass2)}
+.mm-badge b{font-family:var(--display);font-weight:700;font-size:18px;line-height:1}
+.mm-badge small{font-size:9px;color:var(--mut);margin-bottom:6px}
+.mm-cur span{display:flex;flex-direction:column;align-items:center;line-height:1.05}
+.mm-cur b{font-family:var(--display);font-weight:700;font-size:19px;font-variant-numeric:tabular-nums}
+.mm-cur small{font-size:10px;color:var(--mut)}
+.mm-shop{font-family:var(--display);font-weight:700;font-size:20px;letter-spacing:.1em;color:var(--brass);background:linear-gradient(90deg,transparent,#c9a45c1f);border:0;border-bottom:1px solid var(--brass);padding:6px 6px 6px 18px}
+.mm-mid{display:flex;align-items:center;justify-content:center;gap:24px;min-height:0}
+.mm-hero{flex:1 1 220px;max-width:300px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.mm-hero .logo{text-align:left}.mm-hero .logo .u{padding-left:0}.mm-hero .logo .bars{justify-content:flex-start}
+.mm-hero .tag{text-align:left}
+.mm-fan{display:flex;align-items:center;gap:14px;min-height:0}
+.mc{--h:min(230px,calc(100vh - 170px));position:relative;flex:none;height:var(--h);width:calc(var(--h) * .7);padding:0;border-radius:8px;overflow:hidden;
+  border:2px solid #b8955088;background:#15171c;box-shadow:0 8px 24px #000c,inset 0 0 0 1px #ffffff14;transition:transform .2s}
+.mc-art{position:absolute;inset:0;display:grid;place-items:center;background:radial-gradient(circle at 50% 35%,color-mix(in srgb,var(--u) 55%,#000),#0b0c10 80%)}
+.mc-art .art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 20%}
+.mc-ico{font-size:calc(var(--h) * .3);filter:saturate(.7)}
+.mc::after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 45%,#000d 88%)}
+.mc-l{position:absolute;left:6px;right:6px;bottom:10px;z-index:2;text-align:center;font-family:var(--display);font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:calc(var(--h) * .1);line-height:1;color:#f3ead6;text-shadow:0 2px 4px #000}
+.mc-l small{display:block;margin-top:4px;font-family:var(--body);font-weight:500;font-size:11px;letter-spacing:.08em;color:var(--mut)}
+.mm-fan .mc:nth-child(2){transform:rotate(-2deg) translateY(10px)}.mm-fan .mc:nth-child(3){transform:rotate(3deg) translateY(4px)}
+.mc.main{--h:min(260px,calc(100vh - 140px));border-color:var(--brass);box-shadow:4px 4px 0 -1px #15171c,4px 4px 0 1px #b8955066,8px 8px 0 -1px #15171c,8px 8px 0 1px #b8955044,0 10px 30px #000c}
+.mc:active{transform:scale(.97)}
+.mm-bot{display:flex;justify-content:space-between;align-items:center}
+.mm-icons{display:flex;gap:8px}
+.mm-icons .ib{width:44px;height:44px;font-size:20px;border-color:#b8955066}
+.ls-row{display:flex;justify-content:center;gap:12px;flex:none;padding-top:6px}
+.lc{--h:min(210px,calc(100vh - 230px))}
+.lc.on{border-color:var(--brass);transform:translateY(-6px);box-shadow:0 0 0 2px var(--brass),0 10px 30px #000c}
+.lc .mc-l{font-size:calc(var(--h) * .085)}
+.ls-info{display:flex;align-items:center;gap:14px;padding:10px 12px;border-radius:8px;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--u)}
+.ls-txt{flex:1;min-width:0;font-size:13px;line-height:1.4}
+.ls-txt>b{color:var(--brass)}.ls-txt .wp{color:var(--mut)}.ls-txt .bad{color:#ff7a72;font-weight:600}
+.ls-info .btn{flex:none;min-width:120px}
+@media (orientation:portrait){
+  .mm-mid{flex-direction:column;gap:14px}
+  .mm-hero{max-width:none;flex:none}
+  .mm-fan{flex-wrap:wrap;justify-content:center;gap:10px}
+  .mc{--h:min(190px,34vh)}.mc.main{--h:min(210px,38vh)}
+  .mm-cur small{display:none}.mm-badge{display:none}
+  .ls-row{flex-wrap:wrap}.lc{--h:min(180px,30vh)}
+  .ls-info{flex-direction:column;align-items:stretch}
+}
+
 /* ---------- telefon poziomo: układ stołu jak w Hearthstonie ---------- */
 @media (orientation:landscape) and (max-height:560px){
   #app{max-width:1100px}
@@ -257,11 +313,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
   .mid .log{white-space:normal;flex:none;max-height:7.5em;overflow:hidden;font-size:12px;line-height:1.25}
   .mid .pend{flex:none;font-size:13px}
   .endb{padding:16px 6px;font-size:16px}
-  .menu{display:grid;grid-template-columns:1fr 1fr;align-content:center;column-gap:28px;row-gap:12px}
-  .menu>*{grid-column:1;margin:0!important}
-  .menu .mbtns{grid-column:2;grid-row:1 / span 6;align-self:center}
-  .logo .m{font-size:clamp(40px,8vw,64px)}
-  .worlds{display:grid;grid-template-columns:1fr 1fr}
+  .logo .m{font-size:clamp(38px,7vw,60px)}
   .grid{grid-template-columns:repeat(auto-fill,minmax(112px,1fr))}
   .ov h2{font-size:30px}
   .ov .card.lg{font-size:min(32px,calc((100vh - 70px) / 9.8))}

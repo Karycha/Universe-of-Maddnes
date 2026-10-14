@@ -35,6 +35,7 @@ Legenda: ✅ zrobione · 🔨 w trakcie · ⏳ zaplanowane · 💭 do decyzji
 - ✅ Eksport/import zapisu kolekcji (kod `UM2:…` do skopiowania)
 - ✅ Stół powiększony do 7 miejsc na stronę, kafelki skalują się do ekranu
 - ✅ Gra w poziomie (układ jak w Hearthstonie) + instalacja na ekranie początkowym jak apka (pełny ekran)
+- ✅ Menu w stylu Gwinta (pasek profilu i walut, wachlarz kart-przycisków) i wybór świata jako rząd kart Liderów
 
 ## Etap 2 — Czytelność i balans ⏳
 - Animacje: atak (lot jednostki do celu), śmierć jednostki, zagranie karty
