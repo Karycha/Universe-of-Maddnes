@@ -84,7 +84,8 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .card.sm{font-size:9.15px}.card.mm{font-size:11.4px}.card.md{font-size:15px}.card.lg{font-size:32px}
 .card::before{content:"";position:absolute;left:.35em;right:.35em;top:.35em;height:4.9em;border-radius:.2em;
   background:radial-gradient(circle at 50% 42%,color-mix(in srgb,var(--u) 75%,#000),color-mix(in srgb,var(--u) 22%,#08090c) 80%);box-shadow:inset 0 0 .6em #000c}
-.card .art{position:absolute;left:.35em;top:.35em;width:calc(100% - .7em);height:4.9em;object-fit:cover;border-radius:.2em;z-index:1}
+.card .art{position:absolute;left:.35em;top:.35em;width:calc(100% - .7em);height:4.9em;object-fit:cover;object-position:center 22%;border-radius:.2em;z-index:1}
+.unit .art,.por .art,.lt .lp .art{object-position:center 22%}
 .card.has-art .ci{display:none}
 .card .cost{position:absolute;top:.15em;left:.15em;width:1.45em;height:1.45em;border-radius:50%;display:grid;place-items:center;z-index:3;
   font-family:var(--display);font-weight:700;font-size:1.05em;color:#dbe8fa;background:radial-gradient(circle at 40% 35%,#2f4f78,#121c2b);border:.06em solid var(--brass)}
@@ -341,8 +342,42 @@ function cardFace(c,size,extra=''){
     ${u?`<span class="ca">${c.atk}</span><span class="ch">${c.hp}</span>`:`<span class="sp">Zaklęcie</span>`}${extra}</div>`;
 }
 /* Grafiki: pole art w karcie. art:true → art/<id>.webp, albo podaj własną ścieżkę. Brak pliku = emoji. */
-function artSrc(c){return c&&c.art?(c.art===true?`art/${c.id}.webp`:c.art):null}
-const artImg=a=>`<img class="art" src="${a}" alt="" loading="lazy" onerror="this.parentNode.classList.remove('has-art');this.remove()">`;
+/* Grafiki z zewnętrznych API (prywatne testy): gra pobiera linki w przeglądarce i zapamiętuje je w localStorage.
+   wiki = Wikipedia (tytuł artykułu), hero = Superhero API (nazwa), jikan = MyAnimeList/Jikan (nazwa postaci). */
+const ART_SRC = {
+  gandalf:['wiki','Gandalf'], vader:['wiki','Darth_Vader'], batman:['hero','Batman'], goku:['jikan','Goku'],
+  gollum:['wiki','Gollum'], grogu:['wiki','Grogu'], legolas:['wiki','Legolas'], kapitan:['hero','Captain America'],
+  naruto:['jikan','Naruto'], spidey:['hero','Spider-Man'], t800:['wiki','Terminator_(character)'], luffy:['jikan','Luffy'],
+  wonder:['hero','Wonder Woman'], smaug:['wiki','Smaug'], godzilla:['wiki','Godzilla'], kame:['wiki','Kamehameha_(Dragon_Ball)'],
+  armia:['wiki','Army_of_the_Dead_(Middle-earth)'], gwiazda:['wiki','Death_Star'],
+  gimli:['wiki','Gimli_(Middle-earth)'], aragorn:['wiki','Aragorn'], sauron:['wiki','Sauron'], ripley:['wiki','Ellen_Ripley'],
+  xeno:['wiki','Xenomorph'], optimus:['wiki','Optimus_Prime'], deadpool:['hero','Deadpool'], thor:['hero','Thor'],
+  thanos:['hero','Thanos'], zoro:['jikan','Zoro'], vegeta:['jikan','Vegeta'], saitama:['jikan','Saitama'],
+  pierscien:['wiki','One_Ring'], rozkaz66:['wiki','Order_66'], tarcza:['wiki',"Captain_America's_shield"],
+};
+const ART_KEY='universe-madness-art-v1';
+let ART={};
+try{ART=JSON.parse(localStorage.getItem(ART_KEY))||{}}catch(e){}
+function artSrc(c){if(!c)return null;if(c.art)return c.art===true?`art/${c.id}.webp`:c.art;return ART[c.id]||null}
+const artImg=a=>`<img class="art" src="${a}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.remove('has-art');this.remove()">`;
+async function fetchJSON(u){const r=await fetch(u);if(!r.ok)throw new Error(r.status);return r.json()}
+let HEROES=null;
+async function findArt([src,q]){
+  if(src==='wiki'){const d=await fetchJSON(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(q)}`);return (d.thumbnail&&d.thumbnail.source)||(d.originalimage&&d.originalimage.source)||''}
+  if(src==='hero'){if(!HEROES)HEROES=await fetchJSON('https://cdn.jsdelivr.net/gh/akabab/superhero-api@0.3.0/api/all.json');
+    const h=HEROES.find(x=>x.name.toLowerCase()===q.toLowerCase());return h?h.images.lg||h.images.md:''}
+  if(src==='jikan'){await sleep(450);const d=await fetchJSON(`https://api.jikan.moe/v4/characters?q=${encodeURIComponent(q)}&order_by=favorites&sort=desc&limit=1`);
+    const c=d.data&&d.data[0];return c?(c.images.webp&&c.images.webp.image_url)||c.images.jpg.image_url:''}
+  return '';
+}
+async function resolveArt(){
+  let changed=false;
+  for(const [id,spec] of Object.entries(ART_SRC)){
+    if(ART[id]!==undefined)continue;
+    try{ART[id]=await findArt(spec);changed=true}catch(e){/* offline albo limit API: spróbuje przy następnym uruchomieniu */}
+  }
+  if(changed){try{localStorage.setItem(ART_KEY,JSON.stringify(ART))}catch(e){}if(!drag&&screen!=='game')render()}
+}
 const backFace = size=>`<div class="card ${size} back"><span class="bk">UM</span></div>`;
 
 /* ---------- zapis kolekcji ---------- */
@@ -879,6 +914,7 @@ function doAct(act,ds){
 const inDeckOf=(d,x)=>d.filter(y=>y===x).length;
 window.addEventListener('resize',()=>{if(screen==='game'&&!drag)render()});
 render();
+resolveArt();
 </script>
 
 </body>

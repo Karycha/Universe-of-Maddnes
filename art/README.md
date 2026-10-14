@@ -1,6 +1,10 @@
 # Grafiki kart
 
-Gra szuka grafiki w tym folderze. Jak pliku nie ma, pokazuje emoji — nic się nie psuje.
+Domyślnie gra przy pierwszym uruchomieniu pobiera linki do grafik z Wikipedii, Superhero API i Jikan (MyAnimeList) — mapa jest w `ART_SRC` w `index.html` — i zapamiętuje je w przeglądarce. To rozwiązanie do prywatnych testów.
+
+Własny plik z tego folderu (`art:true` w karcie) ma pierwszeństwo przed grafiką z API. Jak nie ma ani jednego, ani drugiego, gra pokazuje emoji.
+
+Żeby wymusić ponowne pobranie grafik: usuń dane strony w przeglądarce (albo klucz `universe-madness-art-v1` w localStorage).
 
 ## Jak dodać grafikę do karty
 
