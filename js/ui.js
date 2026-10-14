@@ -1,5 +1,5 @@
 /* Universe Madness — WIDOK: ekrany, karty, dotyk, paczki, kolekcja, zapis. */
-const APP_VERSION='0.9';   // przy każdej aktualizacji podbij tu i w version.json (i ?v= w index.html)
+const APP_VERSION='0.10';   // przy każdej aktualizacji podbij tu i w version.json (i ?v= w index.html)
 /* Auto-aktualizacja: telefon trzyma starą stronę w pamięci podręcznej, więc sprawdzamy version.json bez cache. */
 (function(){try{fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{
   if(j&&j.v&&j.v!==APP_VERSION&&!location.search.includes('v='+j.v))location.replace('./?v='+j.v);}).catch(()=>{})}catch(e){}})();
@@ -300,11 +300,51 @@ function renderColl(){
     <div class="body">${artNote()}${body}</div></div>${modal}`;
 }
 
+/* ---------- animacje ---------- */
+const RM=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
+let LUNGE=null;
+/* wyskok jednostki do celu; obietnica kończy się w chwili uderzenia */
+function lunge(uid,tk){
+  return new Promise(res=>{
+    const a=app.querySelector(`[data-k="U${uid}"]`), b=app.querySelector(`[data-k="${tk}"]`);
+    if(!a||!b||RM()||!a.animate){res();return}
+    const ra=a.getBoundingClientRect(), rb=b.getBoundingClientRect();
+    const dx=((rb.left+rb.width/2)-(ra.left+ra.width/2))*.8, dy=((rb.top+rb.height/2)-(ra.top+ra.height/2))*.8;
+    a.style.zIndex=30;a.style.position='relative';
+    a.animate([{transform:'none'},{transform:`translate(${dx*.15}px,${dy*.15}px) scale(1.08)`,offset:.35},{transform:`translate(${dx}px,${dy}px) scale(1.12)`}],{duration:300,easing:'ease-in',fill:'forwards'});
+    LUNGE={uid,dx,dy};setTimeout(res,300);
+  });
+}
+/* po renderze: atakujący wraca z miejsca uderzenia na swoje pole */
+function lungeBack(){
+  if(!LUNGE)return;const {uid,dx,dy}=LUNGE;LUNGE=null;
+  const a=app.querySelector(`[data-k="U${uid}"]`);
+  if(a&&a.animate&&!RM())a.animate([{transform:`translate(${dx}px,${dy}px) scale(1.12)`,zIndex:30},{transform:'none'}],{duration:260,easing:'ease-out'});
+}
+/* karta zagrana przez przeciwnika pokazuje się na chwilę na środku */
+function showPlayed(id){
+  return new Promise(res=>{
+    if(RM()){res();return}
+    const d=document.createElement('div');d.className='played';d.innerHTML=cardFace(CARD[id],'md')+'<span>Przeciwnik zagrywa</span>';
+    document.body.appendChild(d);setTimeout(()=>{d.remove();res()},1050);
+  });
+}
+const settle=()=>new Promise(r=>requestAnimationFrame(()=>r()));
+/* atak gracza: walidacja, wyskok, potem właściwy atak */
+async function attackUI(uid,t){
+  if(!canAttackTarget(0,uid,t)){if(t&&t.p===1)toast('Najpierw zbij jednostkę z Prowokacją');G.sel=null;render();return}
+  G.anim=true;G.sel=null;render();
+  await lunge(uid,keyOf(t));
+  attack(0,uid,t);G.anim=false;render();
+}
+
 async function runAI(){
-  G.busy=true;render();await sleep(900);
+  G.busy=true;render();await sleep(700);
   for(const step of aiTurnSteps(1)){
     if(screen!=='game')return;
-    render();await sleep(step==='attack'?750:900);
+    if(step&&step.kind==='preplay'){await showPlayed(step.id);continue}
+    if(step&&step.kind==='preattack'){render();await lunge(step.uid,keyOf(step.t));continue}
+    render();await settle();await sleep(step==='attack'?450:550);
   }
   G.busy=false;
   if(screen!=='game')return;
@@ -360,14 +400,29 @@ function leaderBar(p,tg,myTurn){
 }
 function unitHTML(u,owner,tg,myTurn){
   const k='U'+u.uid; u.art=artSrc(CARD[u.id]||TOKENS[u.id]);
-  const cls=['unit',u.art?'has-art':'',u.kw.includes('taunt')?'taunt':'',owner===0&&myTurn&&!G.busy&&u.canAttack&&!G.pending?'ready':'',G.sel===u.uid?'sel':'',tg.has(k)?'tgt':''].join(' ');
+  const cls=['unit',G.seen&&!G.seen.has(u.uid)&&G.phase==='play'?'enter':'',u.art?'has-art':'',u.kw.includes('taunt')?'taunt':'',owner===0&&myTurn&&!G.busy&&u.canAttack&&!G.pending?'ready':'',G.sel===u.uid?'sel':'',tg.has(k)?'tgt':''].join(' ');
   return `<div class="${cls}" data-uid="${u.uid}" data-owner="${owner}" data-tgt="${k}" data-k="${k}" style="--u:var(--${u.world})">
     ${u.art?artImg(u.art):''}<span class="ui">${u.icon}</span><span class="nm">${u.name}</span>
     ${u.kw.includes('charge')?'<span class="kw">⚡</span>':''}
     <span class="at ${u.atk>u.baseAtk?'up':''}">${u.atk}</span><span class="hpx ${u.hp<u.maxHp?'hurt':u.maxHp>u.baseHp?'up':''}">${u.hp}</span>
     ${u.frozen||u.webbed?'<span class="web">🕸️</span>':''}</div>`;
 }
+function deathGhosts(){
+  const alive=new Set([...G.p[0].board,...G.p[1].board].map(u=>u.uid)), out=[];
+  if(RM())return out;
+  app.querySelectorAll('.unit[data-uid]').forEach(el=>{
+    if(alive.has(+el.dataset.uid))return;
+    const r=el.getBoundingClientRect(), g=el.cloneNode(true);
+    ['data-uid','data-k','data-tgt','data-owner'].forEach(a=>g.removeAttribute(a));
+    g.classList.remove('tgt','sel','ready');g.classList.add('dying');
+    Object.assign(g.style,{position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',margin:0,fontSize:getComputedStyle(el).fontSize});
+    out.push(g);
+  });
+  return out;
+}
 function renderGame(){
+  const ghosts=deathGhosts();
+  if(!G.seen)G.seen=new Set();
   const me=G.p[0], ai=G.p[1], myTurn=G.turn===0&&!G.over, tg=targetKeys();
   const anyMove=myTurn&&(me.hand.some(h=>canPlay(0,CARD[h.id]))||me.board.some(u=>u.canAttack)||(!me.powerUsed&&me.mana>=2));
   const W=Math.max(200,app.clientWidth-(isLandscape()?262:0)), n=me.hand.length, cw=64, step=n>1?Math.min(68,(W-cw)/(n-1)):0;
@@ -393,6 +448,9 @@ function renderGame(){
     ${leaderBar(0,tg,myTurn)}
     <div class="hand" id="hand">${me.hand.map((h,i)=>{const c=CARD[h.id];return `<div class="hc ${myTurn&&!G.busy&&!G.pending&&canPlay(0,c)?'ok':''}" data-hand="${i}" style="z-index:${i};${i?`margin-left:${step-cw}px`:''}">${cardFace(c,'sm','',costOf(0,c))}</div>`}).join('')}</div>
   </div>${over}`;
+  ghosts.forEach(g=>{document.body.appendChild(g);setTimeout(()=>g.remove(),650)});
+  [...G.p[0].board,...G.p[1].board].forEach(u=>G.seen.add(u.uid));
+  lungeBack();
   flushFx();
 }
 function flushFx(){
@@ -419,7 +477,7 @@ app.addEventListener('pointerdown',e=>{
   swallow=false;
   if(screen!=='game'||!G)return;
   if(G.preview){G.preview=null;swallow=true;render();return}
-  if(G.phase==='mulligan'||G.over||G.menu||G.busy||G.turn!==0||G.pending)return;
+  if(G.phase==='mulligan'||G.anim||G.over||G.menu||G.busy||G.turn!==0||G.pending)return;
   const h=e.target.closest('[data-hand]'), u=e.target.closest('.unit[data-owner="0"]');
   if(h)drag={kind:'hand',idx:+h.dataset.hand,el:h,x0:e.clientX,y0:e.clientY,moved:false};
   else if(u){const f=findUnit(+u.dataset.uid);if(f&&f.u.canAttack)drag={kind:'unit',uid:+u.dataset.uid,el:u,x0:e.clientX,y0:e.clientY,moved:false}}
@@ -468,7 +526,7 @@ window.addEventListener('pointerup',e=>{
     } else if(e.clientY<handTop-10)playCard(0,d.idx,null);
   } else {
     const t=tEl&&parseKey(tEl.dataset.tgt);
-    if(t&&!attack(0,d.uid,t)&&t.p===1)toast('Najpierw zbij jednostkę z Prowokacją');
+    if(t&&t.p===1){attackUI(d.uid,t);return}
   }
   render();
 });
@@ -479,7 +537,7 @@ app.addEventListener('click',e=>{
   if(swallow){swallow=false;return}
   const a=e.target.closest('[data-act]');
   if(a)return doAct(a.dataset.act,a.dataset);
-  if(screen!=='game'||!G||G.over||G.menu||G.phase==='mulligan')return;
+  if(screen!=='game'||!G||G.over||G.menu||G.anim||G.phase==='mulligan')return;
   const t=e.target.closest('[data-tgt]');
   if(G.pending){
     if(!t)return;
@@ -490,7 +548,7 @@ app.addEventListener('click',e=>{
   }
   if(G.sel&&t){
     const tt=parseKey(t.dataset.tgt);
-    if(tt&&tt.p===1){if(!attack(0,G.sel,tt))toast('Najpierw zbij jednostkę z Prowokacją');G.sel=null;render();return}
+    if(tt&&tt.p===1){attackUI(G.sel,tt);return}
   }
   const h=e.target.closest('[data-hand]');
   if(h){G.sel=null;G.preview=G.p[0].hand[+h.dataset.hand].id;render();return}

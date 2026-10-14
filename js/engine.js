@@ -134,6 +134,10 @@ function playCard(p,idx,target){
   } else applyFx(p,c.play,target,null);
   cleanup();return true;
 }
+function canAttackTarget(p,uid,t){
+  const f=findUnit(uid);if(!f||f.p!==p||!t||G.turn!==p||G.over||!f.u.canAttack)return false;
+  return validAttack(p).map(keyOf).includes(keyOf(t));
+}
 function attack(p,uid,t){
   const f=findUnit(uid);if(!f||f.p!==p||!t||G.turn!==p||G.over)return false;
   const u=f.u;if(!u.canAttack)return false;
@@ -237,6 +241,7 @@ function* aiTurnSteps(p=1){
     if(!opts.length)break;
     const {c,i}=opts[0];
     const t=c.type==='spell'&&TARGETED.has(c.play.t)?aiTarget(c.play,p):null;
+    yield {kind:'preplay',id:c.id};
     playCard(p,i,t);
     if(G.pending){const pd=G.pending;G.pending=null;const tt=aiTarget(pd.eff,p);if(tt)applyFx(p,pd.eff,tt,pd.src);cleanup()}
     yield 'play';
@@ -246,6 +251,8 @@ function* aiTurnSteps(p=1){
     if(G.over)break;
     if(!findUnit(u.uid)||!u.canAttack||u.atk<=0)continue;
     const t=aiAttackTarget(u,p);if(!t)continue;
+    yield {kind:'preattack',uid:u.uid,t};
+    if(G.over)break;
     attack(p,u.uid,t);yield 'attack';
   }
 }

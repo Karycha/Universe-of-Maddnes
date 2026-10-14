@@ -236,6 +236,16 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .ptxt b{color:var(--brass)}
 .code{width:100%;font:12px/1.4 ui-monospace,Menlo,monospace;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px;resize:vertical;word-break:break-all;-webkit-user-select:text;user-select:text}
 .code:focus{outline:1px solid var(--brass)}
+/* ---------- animacje stołu ---------- */
+.unit.enter{animation:enter .42s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes enter{0%{transform:translateY(-26px) scale(1.35);opacity:0}60%{opacity:1}100%{transform:none}}
+.unit.dying{z-index:40;pointer-events:none;animation:die .62s ease-in forwards}
+@keyframes die{0%{filter:none;transform:none}30%{filter:brightness(1.6) sepia(1) hue-rotate(-40deg) saturate(4);transform:scale(1.08)}100%{filter:brightness(.3) sepia(1) hue-rotate(-40deg) saturate(4);transform:scale(.4) rotate(-14deg);opacity:0}}
+.played{position:fixed;left:50%;top:50%;z-index:70;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;animation:played 1.05s ease forwards}
+.played .card{font-size:min(19px,calc((100vh - 120px) / 9.8));box-shadow:0 0 0 2px var(--brass),0 20px 50px #000}
+.played span{font-family:var(--display);font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:14px;color:var(--brass);text-shadow:0 2px 4px #000}
+@keyframes played{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}18%{opacity:1;transform:translate(-50%,-50%) scale(1)}80%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-60%) scale(.85)}}
+
 /* ---------- mulligan ---------- */
 .ov.mull{gap:12px}
 .ov.mull h2{font-size:28px}

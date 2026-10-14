@@ -39,7 +39,7 @@ Legenda: ✅ zrobione · 🔨 w trakcie · ⏳ zaplanowane · 💭 do decyzji
 - ✅ Tylko poziom: w pionie ekran „Obróć telefon”, blokada poziomu na Androidzie, auto-aktualizacja (version.json)
 
 ## Etap 2 — Czytelność i balans ⏳
-- Animacje: atak (lot jednostki do celu), śmierć jednostki, zagranie karty
+- ✅ Animacje: atak (wyskok do celu i powrót), wejście jednostki, śmierć jednostki, karta przeciwnika pokazana na środku
 - Historia walki (rozwijany log tury)
 - ✅ Mulligan na starcie (wymiana kart z ręki; AI oddaje karty 5+ many)
 - Samouczek pierwszej partii
