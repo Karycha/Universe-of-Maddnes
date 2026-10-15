@@ -1,5 +1,5 @@
 /* Universe Madness — WIDOK: ekrany, karty, dotyk, paczki, kolekcja, zapis. */
-const APP_VERSION='0.12';   // przy każdej aktualizacji podbij tu i w version.json (i ?v= w index.html)
+const APP_VERSION='0.13';   // przy każdej aktualizacji podbij tu i w version.json (i ?v= w index.html)
 /* Auto-aktualizacja: telefon trzyma starą stronę w pamięci podręcznej, więc sprawdzamy version.json bez cache. */
 (function(){try{fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{
   if(j&&j.v&&j.v!==APP_VERSION&&!location.search.includes('v='+j.v))location.replace('./?v='+j.v);}).catch(()=>{})}catch(e){}})();
@@ -414,7 +414,7 @@ function leaderBar(p,tg,myTurn){
     :`<div class="epow">${WORLDS[pl.world].n}<br>Ręka: ${pl.hand.length} · Talia ${pl.deck.length}</div>`;
   return `<div class="lb ${p?'lb-e':'lb-m'}">
     <div class="por ${tg.has(k)?'tgt':''}" data-tgt="${k}" data-k="${k}" data-leader="${p}" style="--u:var(--${L.world})">${L.icon}${a?artImg(a):''}<span class="hp">${pl.hp}</span>${pl.armor?`<span class="ar">${pl.armor}</span>`:''}</div>
-    <div class="li"><b>${p?`AI ${AI_LEVELS[G.lv[1]]} · `:''}${L.name}</b><div class="mana"><b>${pl.mana}/${pl.max}</b>${crys}</div>
+    <div class="li">${p?`<span class="lvtag">AI ${AI_LEVELS[G.lv[1]]}</span>`:''}<b>${L.name}</b><div class="mana"><b>${pl.mana}/${pl.max}</b>${crys}</div>
     <small>${mechStatus(p)} · ${p?`Ręka ${pl.hand.length} · `:''}Talia ${pl.deck.length}</small></div>${right}</div>`;
 }
 function unitHTML(u,owner,tg,myTurn){
@@ -444,7 +444,7 @@ function renderGame(){
   if(!G.seen)G.seen=new Set();
   const me=G.p[0], ai=G.p[1], myTurn=G.turn===0&&!G.over, tg=targetKeys();
   const anyMove=myTurn&&(me.hand.some(h=>canPlay(0,CARD[h.id]))||me.board.some(u=>u.canAttack)||(!me.powerUsed&&me.mana>=2));
-  const W=Math.max(200,app.clientWidth-(isLandscape()?262:0)), n=me.hand.length, cw=64, step=n>1?Math.min(68,(W-cw)/(n-1)):0;
+  const W=Math.max(200,app.clientWidth-(isLandscape()?302:0)), n=me.hand.length, cw=isLandscape()?72:64, step=n>1?Math.min(cw+4,(W-cw)/(n-1)):0;
   let mid;
   if(G.pending){
     const nm=G.pending.kind==='bc'?G.pending.name:me.leader.power.name;
@@ -460,7 +460,7 @@ function renderGame(){
     <div class="col"><button class="btn" data-act="again">Jeszcze raz</button><button class="btn sec" data-act="hist">Historia walki</button><button class="btn sec" data-act="packs">Paczki</button><button class="btn sec" data-act="menu">Menu</button></div></div>`}
   else if(G.menu){over=`<div class="ov"><h2>Pauza</h2><div class="col"><button class="btn" data-act="gmenu">Wróć do gry</button><button class="btn sec" data-act="${G.menu==='sure'?'surrender2':'surrender'}">${G.menu==='sure'?'Na pewno? Dotknij jeszcze raz':'Poddaj się'}</button></div></div>`}
   else if(G.preview){const pc=CARD[G.preview]||(TOKENS[G.preview]&&{...TOKENS[G.preview],cost:0,rarity:'C'});over=`<div class="ov">${cardFace(pc,'lg')}<p>Dotknij, aby zamknąć</p></div>`}
-  app.innerHTML=`<div class="game">
+  app.innerHTML=`<div class="game" style="--ew:var(--${ai.world});--mw:var(--${me.world})">
     ${leaderBar(1,tg,myTurn)}
     <div class="board enemy">${ai.board.map(u=>unitHTML(u,1,tg,myTurn)).join('')||'<span class="empty">Pusto</span>'}</div>
     <div class="mid">${mid}</div>

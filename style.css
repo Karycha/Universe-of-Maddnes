@@ -387,24 +387,49 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 /* ---------- telefon poziomo: układ stołu jak w Hearthstonie ---------- */
 @media (orientation:landscape){
   #app{max-width:1100px}
-  .game{grid-template-columns:150px minmax(0,1fr) 96px;grid-template-rows:minmax(0,1fr) minmax(0,1fr) 92px;
-    grid-template-areas:"elb eb mid" "mlb mb mid" "mlb hand mid";gap:6px 10px;padding-block:6px}
+  /* stół w stylu Gwinta: Liderzy w medalionach po lewej, dwie plansze, ręka, okrągły „Koniec tury” po prawej */
+  .game{grid-template-columns:168px minmax(0,1fr) 104px;grid-template-rows:minmax(0,1fr) minmax(0,1fr) 102px;
+    grid-template-areas:"elb eb mid" "mlb mb mid" "mlb hand mid";gap:6px 10px;padding-block:6px;position:relative;isolation:isolate}
+  .game::before{content:"";position:absolute;inset:0 -16px;z-index:-1;pointer-events:none;
+    background:radial-gradient(70% 55% at 55% 25%,color-mix(in srgb,var(--ew) 16%,transparent),transparent 70%),radial-gradient(70% 55% at 55% 75%,color-mix(in srgb,var(--mw) 18%,transparent),transparent 70%)}
   .lb-e{grid-area:elb}.lb-m{grid-area:mlb}.board.enemy{grid-area:eb}.board.mine{grid-area:mb}.mid{grid-area:mid}.hand{grid-area:hand}
-  .lb{flex-direction:column;align-items:flex-start;justify-content:center;gap:5px;padding:0;min-height:0}
-  .lb .li{flex:none;width:100%}
-  .lb .li small{white-space:normal;line-height:1.3}
-  .lb-e .por{width:40px;height:40px;font-size:21px}
+  .lb{flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:0;min-height:0;text-align:center}
+  .lb-m{justify-content:flex-start;padding-top:10px}
+  .lb .li{flex:none;width:100%;align-items:center;gap:2px}
+  .lb .li b{font-size:17px;white-space:normal;line-height:1.05}
+  .lb .li small{white-space:normal;line-height:1.3;font-size:10px}
+  .lb .mana{justify-content:center}
+  .lvtag{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--brass);border:1px solid #c9a45c55;border-radius:3px;padding:1px 6px}
+  .por{margin-bottom:9px;width:62px;height:62px;border:3px solid var(--brass2);box-shadow:0 0 0 2px #0b0c10,0 0 0 3px #c9a45c66,0 6px 16px #000a}
+  .lb-e .por{width:52px;height:52px;font-size:24px}
+  .por .hp{left:50%;right:auto;bottom:-11px;transform:translateX(-50%);min-width:30px;height:22px;border-radius:11px;background:linear-gradient(#d4554d,#8c2520);border:2px solid #0b0c10;font-size:15px}
+  .por .ar{left:auto;right:-9px;bottom:auto;top:-4px;border-radius:50% 50% 45% 45%}
   .lb-e .mana i{display:none}
-  .lb-e .li small{font-size:10px}
-  .lb-e .li b{font-size:15px}
-  .pow{margin-left:0;max-width:none;width:100%}
+  .pow{margin:6px 0 0;max-width:150px;width:100%;border-radius:20px;padding:6px 10px;background:linear-gradient(#262a33,#1a1d24)}
   .epow{display:none}
-  .board{container-type:size}
-  .unit{--uw:min(68px,calc((100cqw - 28px) / 7),calc((100cqh - 18px) / 1.31))}
-  .mid{flex-direction:column;justify-content:center;align-items:stretch;gap:10px;border:0;border-left:1px solid var(--line);padding:0 0 0 10px;min-height:0}
-  .mid .log{white-space:normal;flex:none;max-height:7.5em;overflow:hidden;font-size:12px;line-height:1.25}
-  .mid .pend{flex:none;font-size:13px}
-  .endb{padding:16px 6px;font-size:16px}
+  .board{container-type:size;border-radius:6px;border:1px solid #c9a45c2e;box-shadow:inset 0 0 28px #000b;gap:6px;padding:6px}
+  .board.enemy{background:linear-gradient(180deg,color-mix(in srgb,var(--ew) 14%,#0f1116),#13151b)}
+  .board.mine{background:linear-gradient(0deg,color-mix(in srgb,var(--mw) 16%,#0f1116),#13151b)}
+  .board.mine::before{content:"";position:absolute;left:8%;right:8%;top:-4px;height:1px;background:linear-gradient(90deg,transparent,var(--brass),transparent)}
+  .unit{--uw:min(96px,calc((100cqw - 42px) / 7),calc((100cqh - 16px) / 1.36));height:calc(var(--uw) * 1.36);font-size:calc(var(--uw) * .13);border-radius:6px;border:1px solid #c9a45c55}
+  .unit .ui{top:.5em;font-size:3.4em}
+  .unit .nm{bottom:0;left:0;right:0;height:3.3em;padding:.7em .25em 0;font-size:.95em;background:linear-gradient(transparent,#000d 45%);border-radius:0 0 5px 5px}
+  .unit .at,.unit .hpx{font-size:1.3em;width:1.75em;height:1.75em;bottom:-.4em}
+  .unit .at{left:-.35em}.unit .hpx{right:-.35em}
+  .unit.taunt{border:2px solid #d8d2c2;border-radius:6px 6px 1.6em 1.6em}
+  .unit.taunt .nm{border-radius:0 0 1.5em 1.5em}
+  .unit .kw{font-size:1.25em}
+  .hand{padding-bottom:2px}
+  .hand .card.sm{font-size:10.2px}
+  .mid{flex-direction:column;justify-content:center;align-items:center;gap:12px;border:0;border-left:1px solid #c9a45c33;padding:0 0 0 10px;min-height:0}
+  .mid .smallb{align-self:stretch}
+  .mid .log{white-space:normal;flex:none;max-height:8em;overflow:hidden;font-size:12px;line-height:1.25;text-align:center;align-self:stretch}
+  .mid .pend{flex:none;font-size:13px;text-align:center}
+  .endb{width:86px;height:86px;border-radius:50%;padding:0 6px;font-size:15px;line-height:1.05;border:2px solid #f0d9a2;
+    box-shadow:0 0 0 3px #15171c,0 0 0 4px #c9a45c88,0 8px 20px #000c}
+  .endb[disabled]{border-color:var(--line);box-shadow:0 0 0 3px #15171c,0 0 0 4px var(--line)}
+  .endb.hot{animation:glowR 1.4s ease-in-out infinite}
+  @keyframes glowR{50%{box-shadow:0 0 0 3px #15171c,0 0 0 4px var(--brass),0 0 24px var(--brass)}}
   .logo .m{font-size:clamp(38px,7vw,60px)}
   .grid{grid-template-columns:repeat(auto-fill,minmax(112px,1fr))}
   .ov h2{font-size:30px}
