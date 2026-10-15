@@ -1,5 +1,5 @@
 /* Universe Madness — WIDOK: ekrany, karty, dotyk, paczki, kolekcja, zapis. */
-const APP_VERSION='0.11';   // przy każdej aktualizacji podbij tu i w version.json (i ?v= w index.html)
+const APP_VERSION='0.12';   // przy każdej aktualizacji podbij tu i w version.json (i ?v= w index.html)
 /* Auto-aktualizacja: telefon trzyma starą stronę w pamięci podręcznej, więc sprawdzamy version.json bez cache. */
 (function(){try{fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{
   if(j&&j.v&&j.v!==APP_VERSION&&!location.search.includes('v='+j.v))location.replace('./?v='+j.v);}).catch(()=>{})}catch(e){}})();
@@ -143,7 +143,7 @@ function menuCard(act,label,id,icon,cls=''){
 }
 function renderMenu(){
   const lw=lastWorld(), L=leaderOf(lw), la=artSrc(L);
-  app.innerHTML=`<div class="mm" style="--u:var(--${lw})">
+  app.innerHTML=`<div class="mmn" style="--u:var(--${lw})">
     ${la?`<img class="mm-bg" src="${la}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">`:''}
     <div class="mm-top">
       <div class="mm-prof"><span class="mm-por" style="--u:var(--${lw})">${L.icon}${la?artImg(la):''}</span>
@@ -232,39 +232,56 @@ function addCard(id){
   S.coll[id]=owned(id)+1;return {isNew,dust:0};
 }
 function openPack(){
+  if(PK&&PK.stage==='tear')return;
   if(S.shards<RULES.packCost){toast('Za mało odłamków. Zagraj partię!');return}
   S.shards-=RULES.packCost;
   const cards=[0,1,2,3].map(()=>{const id=rollId('C');return {id,open:false,...addCard(id)}});
   const ch=[];for(let g=0;ch.length<3&&g<60;g++){const id=rollId('R');if(!ch.includes(id))ch.push(id)}
-  persist();PK={cards,choices:ch,picked:null,done:false,res:null};render();
+  persist();PK={stage:'tear',cards,choices:ch,picked:null,res:null,just:new Set()};render();
+  setTimeout(()=>{if(PK&&PK.stage==='tear'){PK.stage='reveal';render()}},RM()?0:950);
 }
 const badge=r=>r.isNew?'<span class="badge new">NOWA</span>':r.dust?`<span class="badge dup">+${r.dust}✨</span>`:'';
+const packArt=(cls='')=>`<div class="pack ${cls}"><span class="pk-u">UNIVERSE</span><span class="pk-m">MADNESS</span><span class="pk-bars"><i></i><i></i><i></i><i></i></span><span class="pk-n">5 kart</span></div>`;
+/* karta do odwracania: rewers + awers w 3D; .just = animacja odwrócenia przy tym renderze */
+function flipCard(c,i,delay=0){
+  const C=CARD[c.id], just=PK.just.has(i);
+  return `<button class="fc ${c.open?'open':''} ${just?'just':''} g-${C.rarity}" data-act="flip" data-i="${i}" style="--d:${delay}s" aria-label="${c.open?C.name:'Odkryj kartę'}">
+    <span class="fc-in"><span class="fc-b">${backFace('pk')}</span><span class="fc-f">${cardFace(C,'pk')}</span></span>
+    ${c.open?badge(c):''}</button>`;
+}
 function renderPack(){
+  const canOpen=S.shards>=RULES.packCost, packs=Math.floor(S.shards/RULES.packCost);
   let body;
-  if(!PK){
-    body=`<div class="shop">${backFace('md')}<h3>Paczka Uniwersów</h3>
-      <p class="note">4 losowe karty ze wszystkich światów, a ostatnią wybierasz z 3 (co najmniej Rzadka). Duplikaty ponad limit zamieniają się w Pył.</p>
-      <button class="btn" data-act="open" ${S.shards<RULES.packCost?'disabled':''}>Otwórz · 100 🔹</button>
-      <p class="note">Odłamki zdobywasz w grach: wygrana +60, porażka +25.</p></div>`;
+  if(!PK||PK.stage==='tear'){
+    const tear=PK&&PK.stage==='tear';
+    body=`<div class="pk-shop">
+      <button class="pk-hit" data-act="open" ${canOpen||tear?'':'disabled'} aria-label="Otwórz paczkę">${packArt(tear?'tear':'')}${tear?'<span class="flash"></span>':''}</button>
+      <div class="pk-side">
+        <h3>Paczka Uniwersów</h3>
+        <p>4 losowe karty ze wszystkich światów, a piątą wybierasz z trzech (co najmniej Rzadka). Duplikaty ponad limit zamieniają się w Pył ✨.</p>
+        <button class="btn" data-act="open" ${canOpen&&!tear?'':'disabled'}>Otwórz · 100 🔹</button>
+        <p class="note">${canOpen?`Stać cię na ${packs} ${packs===1?'paczkę':packs<5?'paczki':'paczek'}.`:'Za mało odłamków. Wygrana daje 35–90 🔹, porażka 25 🔹.'}</p>
+      </div></div>`;
+  } else if(PK.stage==='reveal'){
+    const all=PK.cards.every(c=>c.open);
+    body=`<div class="pk-stage"><p class="sec-t">${all?'Twoje karty':'Dotknij kart, żeby je odkryć'}</p>
+      <div class="pk-row">${PK.cards.map((c,i)=>flipCard(c,i,PK.stagger?PK.stagger.indexOf(i)*.22:0)).join('')}</div>
+      <div class="pk-act">${all?`<button class="btn" data-act="to-choose">Dalej: wybierz piątą kartę</button>`:`<button class="btn sec" data-act="flipall">Odkryj wszystkie</button>`}</div></div>`;
+  } else if(PK.stage==='choose'){
+    const pc=PK.picked&&CARD[PK.picked];
+    body=`<div class="pk-choose"><div class="pk-stage"><p class="sec-t">Piąta karta: wybierz 1 z 3</p>
+      <div class="pk-row">${PK.choices.map(id=>`<button class="pk-pick g-${CARD[id].rarity} ${PK.picked===id?'on':''}" data-act="choose" data-id="${id}">${cardFace(CARD[id],'pk')}</button>`).join('')}</div></div>
+      <div class="pk-info">${pc?`<b>${pc.name}</b><small>${cardLabel(pc)}</small><p>${cardText(pc)||'Bez efektu. Czysta siła.'}</p>${owned(pc.id)?`<small>Masz już ${owned(pc.id)}/${RAR[pc.rarity].max}</small>`:'<small class="nw">Nowa w kolekcji</small>'}`:'<p>Dotknij karty, żeby zobaczyć opis.</p>'}
+        <button class="btn" data-act="take" ${pc?'':'disabled'}>Zabierz kartę</button></div></div>`;
   } else {
-    const allOpen=PK.cards.every(c=>c.open);
-    const slot=(c,i)=>c.open?`<div class="slot flip">${cardFace(CARD[c.id],'mm')}${badge(c)}</div>`
-      :`<button class="slot" data-act="flip" data-i="${i}" aria-label="Odkryj kartę">${backFace('mm')}</button>`;
-    body=`<p class="sec-t">Twoje karty</p><div class="prow">${PK.cards.map(slot).join('')}</div>
-      ${allOpen?'':`<button class="btn sec" data-act="flipall">Odkryj wszystkie</button>`}`;
-    if(allOpen&&!PK.done){
-      const pc=PK.picked&&CARD[PK.picked];
-      body+=`<p class="sec-t">Ostatnia karta: wybierz 1 z 3</p>
-        <div class="prow">${PK.choices.map(id=>`<button class="slot ${PK.picked===id?'pick':''}" data-act="choose" data-id="${id}">${cardFace(CARD[id],'mm')}</button>`).join('')}</div>
-        <p class="ptxt">${pc?`<b>${pc.name}</b> · ${cardLabel(pc)}<br>${cardText(pc)||'Bez efektu.'}`:'Dotknij karty, żeby zobaczyć opis.'}</p>
-        <button class="btn" data-act="take" ${pc?'':'disabled'}>Zabierz kartę</button>`;
-    }
-    if(PK.done){
-      body+=`<p class="sec-t">Wybrana</p><div class="prow"><div class="slot flip">${cardFace(CARD[PK.picked],'md')}${badge(PK.res)}</div></div>
-        <div class="mbtns" style="margin-top:6px"><button class="btn" data-act="open" ${S.shards<RULES.packCost?'disabled':''}>Kolejna paczka · 100 🔹</button><button class="btn sec" data-act="coll">Zobacz kolekcję</button></div>`;
-    }
+    const got=[...PK.cards,{id:PK.picked,...PK.res,pick:true}], dust=got.reduce((s,c)=>s+(c.dust||0),0), nw=got.filter(c=>c.isNew).length;
+    body=`<div class="pk-stage"><p class="sec-t">Z paczki</p>
+      <div class="pk-row sum">${got.map(c=>`<div class="pk-got ${c.pick?'on':''}">${cardFace(CARD[c.id],'pk')}${badge(c)}</div>`).join('')}</div>
+      <p class="note">${nw?`Nowe karty: ${nw}`:'Bez nowych kart'}${dust?` · Pył z duplikatów: +${dust} ✨`:''}</p>
+      <div class="pk-act"><button class="btn" data-act="open" ${canOpen?'':'disabled'}>Kolejna paczka · 100 🔹</button><button class="btn sec" data-act="coll">Kolekcja</button></div></div>`;
   }
-  app.innerHTML=`<div class="scr">${header('Paczki')}<div class="body">${body}</div></div>`;
+  app.innerHTML=`<div class="scr">${header('Paczki')}<div class="body pk-body">${body}</div></div>`;
+  if(PK)PK.just.clear(),PK.stagger=null;
 }
 
 /* ---------- kolekcja i talie ---------- */
@@ -570,7 +587,7 @@ function doAct(act,ds){
   const id=ds.id, dw=CV.deckWorld;
   switch(act){
     case 'noop': return;
-    case 'menu': screen='menu';G=null;if(PK&&PK.done)PK=null;render();break;
+    case 'menu': screen='menu';G=null;if(PK&&PK.stage==='done')PK=null;render();break;
     case 'play': case 'again': screen='leaders';LV.sel=null;G=null;render();break;
     case 'sel-world': LV.sel=ds.w;render();break;
     case 'pick-world': if(deckOk(ds.w))startGame(ds.w);else{CV.tab='deck';CV.deckWorld=ds.w;screen='coll';render()}break;
@@ -583,13 +600,14 @@ function doAct(act,ds){
       try{d=parseCode(v)}catch(e){SV={confirm:false,msg:'Nie udało się wczytać: '+e.message};render();break}
       if(!SV.confirm){SV={confirm:true,msg:''};const keep=v;render();document.getElementById('imp').value=keep;break}
       S=d;persist();SV={confirm:false,msg:`Wczytano: ${Object.values(S.coll).reduce((a,b)=>a+b,0)} kart, 🔹 ${S.shards}, ✨ ${S.dust}.`};render();break}
-    case 'packs': G=null;screen='pack';if(PK&&PK.done)PK=null;render();break;
-    case 'coll': G=null;screen='coll';CV.open=null;if(PK&&PK.done)PK=null;render();break;
+    case 'packs': G=null;screen='pack';if(PK&&PK.stage==='done')PK=null;render();break;
+    case 'coll': G=null;screen='coll';CV.open=null;if(PK&&PK.stage==='done')PK=null;render();break;
     case 'open': openPack();break;
-    case 'flip': PK.cards[+ds.i].open=true;render();break;
-    case 'flipall': PK.cards.forEach(c=>c.open=true);render();break;
+    case 'flip': {const c=PK&&PK.cards[+ds.i];if(c&&!c.open){c.open=true;PK.just.add(+ds.i);render()}break}
+    case 'flipall': if(PK){PK.stagger=[];PK.cards.forEach((c,i)=>{if(!c.open){c.open=true;PK.just.add(i);PK.stagger.push(i)}});render()}break;
+    case 'to-choose': if(PK){PK.stage='choose';render()}break;
     case 'choose': PK.picked=id;render();break;
-    case 'take': if(PK.picked){PK.res=addCard(PK.picked);PK.done=true;persist();render()}break;
+    case 'take': if(PK&&PK.picked&&PK.stage==='choose'){PK.res=addCard(PK.picked);PK.stage='done';persist();render()}break;
     case 'tab': CV.tab=ds.t;render();break;
     case 'filter': CV.filter=ds.f;if(PLAYABLE.includes(ds.f))CV.deckWorld=ds.f;render();break;
     case 'deckworld': CV.deckWorld=ds.w;render();break;

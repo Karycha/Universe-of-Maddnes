@@ -37,6 +37,7 @@ Legenda: ✅ zrobione · 🔨 w trakcie · ⏳ zaplanowane · 💭 do decyzji
 - ✅ Gra w poziomie (układ jak w Hearthstonie) + instalacja na ekranie początkowym jak apka (pełny ekran)
 - ✅ Menu w stylu Gwinta (pasek profilu i walut, wachlarz kart-przycisków) i wybór świata jako rząd kart Liderów
 - ✅ Tylko poziom: w pionie ekran „Obróć telefon”, blokada poziomu na Androidzie, auto-aktualizacja (version.json)
+- ✅ Otwieranie paczek w stylu Gwinta: rozrywana paczka, odwracanie kart w 3D z poświatą rzadkości, wybór z panelem opisu, podsumowanie
 
 ## Etap 2 — Czytelność i balans ⏳
 - ✅ Animacje: atak (wyskok do celu i powrót), wejście jednostki, śmierć jednostki, karta przeciwnika pokazana na środku
